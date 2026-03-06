@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Baton Studio base styling (keep minimal; UX_SPEC defines full theme) */
+:root { color-scheme: dark; }
+html, body { height: 100%; }
+body { margin: 0; }
