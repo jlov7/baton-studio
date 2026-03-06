@@ -359,7 +359,7 @@ The top HUD is always visible across all screens:
 
 Below the HUD: four **agent cards** (role, current activity, energy bar, last commit), mission KPIs, and CTAs.
 
-![Mission Control](assets/ui/mission-control.png)
+<!-- Screenshot: run `make e2e` to generate assets/ui/mission-control.png -->
 
 ---
 
@@ -373,7 +373,7 @@ Below the HUD: four **agent cards** (role, current activity, energy bar, last co
 
 Filter by type, tag, owner agent, or "changed in last N minutes". Toggle between Proposals and Committed.
 
-![World Model](assets/ui/world-model.png)
+<!-- Screenshot: run `make e2e` to generate assets/ui/world-model.png -->
 
 ---
 
@@ -389,7 +389,7 @@ An interactive React Flow graph. Click any node to pin it in the inspector. Use 
 
 Keyboard shortcuts: `/` to search nodes, `j` / `k` to navigate.
 
-![Causal Graph](assets/ui/causal-graph.png)
+<!-- Screenshot: run `make e2e` to generate assets/ui/causal-graph.png -->
 
 ---
 
@@ -746,3 +746,11 @@ MIT — see [LICENSE](LICENSE). Adjust for your organization.
 *From text-passing chaos to substrate-native clarity.*
 
 </div>
+
+---
+
+<sub>
+
+**Disclaimer:** This is an independent personal R&D project. It is not affiliated with, endorsed by, or representative of any employer, organization, or company. This work was created on personal time using personal resources and does not constitute a product, service, or official offering of any kind. All opinions, designs, and technical decisions are solely my own.
+
+</sub>
