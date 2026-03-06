@@ -749,8 +749,4 @@ MIT — see [LICENSE](LICENSE). Adjust for your organization.
 
 ---
 
-<sub>
-
-**Disclaimer:** This is an independent personal R&D project. It is not affiliated with, endorsed by, or representative of any employer, organization, or company. This work was created on personal time using personal resources and does not constitute a product, service, or official offering of any kind. All opinions, designs, and technical decisions are solely my own.
-
-</sub>
+<p align="center"><sub><b>Disclaimer:</b> This is an independent personal R&D project. It is not affiliated with, endorsed by, or representative of any employer, organization, or company. This work was created on personal time using personal resources and does not constitute a product, service, or official offering of any kind. All opinions, designs, and technical decisions are solely my own.</sub></p>
