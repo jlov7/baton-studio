@@ -1,7 +1,22 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter
 from pydantic import BaseModel
+
+from baton_substrate.api import (
+    agents,
+    baton,
+    causal,
+    demo,
+    energy,
+    events,
+    export,
+    metrics,
+    missions,
+    patches,
+    world,
+    ws,
+)
 
 router = APIRouter()
 
@@ -17,13 +32,15 @@ async def health() -> HealthResponse:
     return HealthResponse()
 
 
-@router.websocket("/ws")
-async def ws(websocket: WebSocket) -> None:
-    await websocket.accept()
-    try:
-        # Placeholder: server will push events here.
-        while True:
-            _ = await websocket.receive_text()
-            await websocket.send_text("{"type":"noop"}")
-    except WebSocketDisconnect:
-        return
+router.include_router(missions.router)
+router.include_router(agents.router)
+router.include_router(world.router)
+router.include_router(patches.router)
+router.include_router(baton.router)
+router.include_router(causal.router)
+router.include_router(energy.router)
+router.include_router(events.router)
+router.include_router(metrics.router)
+router.include_router(export.router)
+router.include_router(demo.router)
+router.include_router(ws.router)

@@ -7,24 +7,24 @@ dev:
 	$(MAKE) -j2 backend frontend
 
 backend:
-	cd backend && python -m venv .venv && source .venv/bin/activate && pip install -U pip && pip install -e .[dev] && uvicorn baton_substrate.api.main:app --reload --port 8787
+	cd backend && uv sync --dev && uv run uvicorn baton_substrate.api.main:app --reload --port 8787
 
 frontend:
-	cd frontend && npm install && npm run dev
+	cd frontend && pnpm install && pnpm dev
 
 check:
-	cd backend && source .venv/bin/activate && ruff check . && ruff format --check . && mypy baton_substrate && pytest -q
-	cd frontend && npm run lint && npm run typecheck
+	cd backend && uv run ruff check . && uv run ruff format --check . && uv run mypy baton_substrate && uv run pytest -q
+	cd frontend && pnpm lint && pnpm typecheck
 
 test:
-	cd backend && source .venv/bin/activate && pytest -q
+	cd backend && uv run pytest -q
 
 e2e:
-	cd frontend && npm run e2e
+	cd frontend && pnpm e2e
 
 demo:
-	cd backend && source .venv/bin/activate && python -m baton_substrate.scripts.run_demo --out ../dist
-	cd frontend && npm run build
+	cd backend && uv run python -m baton_substrate.scripts.run_demo --out ../dist
+	cd frontend && pnpm build
 
 clean:
 	rm -rf backend/.venv backend/*.sqlite frontend/node_modules frontend/.next dist

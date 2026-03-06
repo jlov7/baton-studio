@@ -7,6 +7,12 @@ The MCP server exposes Baton Studio operations as tools for agents.
 ### baton.health
 - returns backend health + connection status
 
+### baton.list_types
+Inputs:
+- mission_id
+Outputs:
+- array of entity type definitions (type_name, json_schema, invariants)
+
 ### baton.read_world
 Inputs:
 - mission_id

@@ -99,13 +99,24 @@ Expose:
 - `GET /health`
 - `POST /missions`
 - `GET /missions/{id}`
+- `POST /missions/{id}/status`
 - `GET /missions/{id}/world`
 - `POST /missions/{id}/patches/propose`
 - `POST /missions/{id}/patches/commit`
 - `POST /missions/{id}/baton/claim`
 - `POST /missions/{id}/baton/release`
+- `GET /missions/{id}/baton`
 - `POST /missions/{id}/causal/edge`
+- `GET /missions/{id}/causal/graph`
+- `GET /missions/{id}/energy/{actor_id}`
+- `POST /missions/{id}/energy/spend`
 - `GET /missions/{id}/events?after=...`
+- `GET /missions/{id}/agents`
+- `POST /missions/{id}/agents`
+- `GET /missions/{id}/metrics/sc`
+- `POST /missions/{id}/demo/start`
+- `POST /missions/{id}/export`
+- `POST /missions/{id}/import`
 
 ### WebSocket
 - `WS /ws?mission_id=...`
@@ -118,7 +129,7 @@ See `docs/MCP_SPEC.md`
 
 ## 7) Storage
 SQLite tables:
-- missions
+- missions (includes `status` column: idle/running/paused/exported)
 - entity_types
 - entities
 - entity_versions
@@ -128,6 +139,7 @@ SQLite tables:
 - baton_state
 - patches (pending)
 - events (append-only)
+- agents (mission_id, actor_id, display_name, role, joined_at, status)
 
 ---
 

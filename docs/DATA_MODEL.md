@@ -15,6 +15,7 @@ This is the recommended baseline schema. It is designed for:
 - title TEXT
 - goal TEXT
 - energy_budget INTEGER
+- status TEXT (idle|running|paused|exported) DEFAULT 'idle'
 
 ### entity_types
 - mission_id TEXT
@@ -52,6 +53,7 @@ PK (mission_id, entity_id, version)
 - node_id TEXT
 - node_type TEXT
 - label TEXT
+- status TEXT (valid|stale) DEFAULT 'valid'
 - metadata_json TEXT
 PK (mission_id, node_id)
 
@@ -83,6 +85,15 @@ PK (mission_id, actor_id)
 - type TEXT
 - actor_json TEXT
 - payload_json TEXT
+
+### agents
+- mission_id TEXT
+- actor_id TEXT
+- display_name TEXT
+- role TEXT
+- joined_at TEXT
+- status TEXT (active|idle)
+PK (mission_id, actor_id)
 
 ---
 

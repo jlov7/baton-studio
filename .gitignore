@@ -1,14 +1,49 @@
-# Python
+# ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+.eggs/
 .venv/
+venv/
 .env
+.env.*
+!.env.example
 
-# Node
+# ── Node ──────────────────────────────────────────────────────────────────────
 node_modules/
 .next/
+out/
 dist/
+build/
+*.tsbuildinfo
+.pnpm-store/
 
-# Local data
+# ── Local data + runtime ──────────────────────────────────────────────────────
 *.sqlite
+*.db
+*.db-shm
+*.db-wal
 data/
+
+# ── Test artifacts ────────────────────────────────────────────────────────────
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+playwright-report/
+test-results/
+
+# ── OS / Editor ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/settings.json
+
+# ── Claude Code internals ─────────────────────────────────────────────────────
+.agents/
