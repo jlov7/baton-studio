@@ -17,8 +17,13 @@ router = APIRouter(prefix="/missions/{mission_id}/causal", tags=["causal"])
 async def add_edge(mission_id: str, req: AddEdgeRequest) -> AddEdgeResponse:
     async with get_db() as db:
         return await causal_service.add_edge(
-            db, mission_id, req.actor_id,
-            req.from_id, req.to_id, req.type, req.metadata,
+            db,
+            mission_id,
+            req.actor_id,
+            req.from_id,
+            req.to_id,
+            req.type,
+            req.metadata,
         )
 
 

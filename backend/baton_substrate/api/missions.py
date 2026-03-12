@@ -17,7 +17,10 @@ router = APIRouter(prefix="/missions", tags=["missions"])
 async def create_mission(req: CreateMissionRequest) -> MissionResponse:
     async with get_db() as db:
         return await mission_service.create_mission(
-            db, req.title, req.goal, req.energy_budget,
+            db,
+            req.title,
+            req.goal,
+            req.energy_budget,
         )
 
 

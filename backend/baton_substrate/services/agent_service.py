@@ -36,7 +36,10 @@ async def register(
     await db.flush()
     actor = Actor(actor_id=actor_id, actor_type="agent", display_name=display_name or actor_id)
     await event_service.emit(
-        db, mission_id, "agent.joined", actor,
+        db,
+        mission_id,
+        "agent.joined",
+        actor,
         {"role": role},
     )
     return AgentDetail(
@@ -51,9 +54,7 @@ async def register(
 
 
 async def list_agents(db: AsyncSession, mission_id: str) -> list[AgentDetail]:
-    result = await db.execute(
-        select(AgentRow).where(AgentRow.mission_id == mission_id)
-    )
+    result = await db.execute(select(AgentRow).where(AgentRow.mission_id == mission_id))
     rows = result.scalars().all()
     return [
         AgentDetail(

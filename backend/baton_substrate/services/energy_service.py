@@ -10,7 +10,9 @@ from baton_substrate.services import event_service
 
 
 async def get_or_create_account(
-    db: AsyncSession, mission_id: str, actor_id: str,
+    db: AsyncSession,
+    mission_id: str,
+    actor_id: str,
 ) -> EnergyAccountRow:
     result = await db.execute(
         select(EnergyAccountRow).where(
@@ -28,14 +30,20 @@ async def get_or_create_account(
 
 
 async def allocate(
-    db: AsyncSession, mission_id: str, actor_id: str, amount: int,
+    db: AsyncSession,
+    mission_id: str,
+    actor_id: str,
+    amount: int,
 ) -> int:
     acct = await get_or_create_account(db, mission_id, actor_id)
     acct.balance += amount
     await db.flush()
     actor = Actor(actor_id="system", actor_type="system", display_name="System")
     await event_service.emit(
-        db, mission_id, "energy.allocated", actor,
+        db,
+        mission_id,
+        "energy.allocated",
+        actor,
         {"actor_id": actor_id, "amount": amount, "new_balance": acct.balance},
     )
     return acct.balance
@@ -56,7 +64,9 @@ async def auto_allocate(db: AsyncSession, mission_id: str, actor_id: str) -> int
 
 
 async def get_balance(
-    db: AsyncSession, mission_id: str, actor_id: str,
+    db: AsyncSession,
+    mission_id: str,
+    actor_id: str,
 ) -> EnergyBalanceResponse:
     acct = await get_or_create_account(db, mission_id, actor_id)
     result = await db.execute(select(MissionRow).where(MissionRow.mission_id == mission_id))
@@ -70,7 +80,11 @@ async def get_balance(
 
 
 async def spend(
-    db: AsyncSession, mission_id: str, actor_id: str, amount: int, reason: str = "",
+    db: AsyncSession,
+    mission_id: str,
+    actor_id: str,
+    amount: int,
+    reason: str = "",
 ) -> EnergySpendResponse:
     acct = await get_or_create_account(db, mission_id, actor_id)
     if acct.balance < amount:
@@ -79,7 +93,10 @@ async def spend(
     await db.flush()
     actor = Actor(actor_id=actor_id, actor_type="agent", display_name=actor_id)
     await event_service.emit(
-        db, mission_id, "energy.spent", actor,
+        db,
+        mission_id,
+        "energy.spent",
+        actor,
         {"amount": amount, "reason": reason, "new_balance": acct.balance},
     )
     return EnergySpendResponse(new_balance=acct.balance)

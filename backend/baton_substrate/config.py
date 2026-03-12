@@ -6,7 +6,9 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    database_url: str = f"sqlite+aiosqlite:///{Path(__file__).resolve().parent.parent / 'baton.sqlite'}"
+    database_url: str = (
+        f"sqlite+aiosqlite:///{Path(__file__).resolve().parent.parent / 'baton.sqlite'}"
+    )
     host: str = "0.0.0.0"
     port: int = 8787
     baton_lease_ms: int = 20_000

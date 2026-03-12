@@ -1,0 +1,72 @@
+erDiagram
+    missions {
+        TEXT mission_id PK
+        TEXT title
+        TEXT goal
+        INTEGER energy_budget
+        TEXT status
+        TEXT created_at
+    }
+    agents {
+        TEXT mission_id FK
+        TEXT actor_id PK
+        TEXT display_name
+        TEXT role
+        TEXT status
+    }
+    entities {
+        TEXT mission_id FK
+        TEXT entity_id PK
+        TEXT type_name FK
+    }
+    entity_versions {
+        TEXT mission_id FK
+        TEXT entity_id FK
+        INTEGER version PK
+        TEXT actor_id
+        TEXT value_json
+        TEXT created_at
+    }
+    causal_nodes {
+        TEXT mission_id FK
+        TEXT node_id PK
+        TEXT node_type
+        TEXT label
+        TEXT status
+        TEXT metadata_json
+    }
+    causal_edges {
+        TEXT mission_id FK
+        TEXT edge_id PK
+        TEXT from_id FK
+        TEXT to_id FK
+        TEXT edge_type
+    }
+    energy_accounts {
+        TEXT mission_id FK
+        TEXT actor_id PK
+        INTEGER balance
+    }
+    baton_state {
+        TEXT mission_id PK
+        TEXT holder_actor_id
+        TEXT queue_json
+        TEXT lease_expires_at
+    }
+    events {
+        TEXT event_id PK
+        TEXT mission_id FK
+        TEXT ts
+        TEXT type
+        TEXT actor_json
+        TEXT payload_json
+    }
+
+    missions ||--o{ agents : has
+    missions ||--o{ entities : contains
+    entities ||--o{ entity_versions : versioned_by
+    missions ||--o{ causal_nodes : has
+    causal_nodes ||--o{ causal_edges : connected_by
+    missions ||--o{ energy_accounts : tracks
+    missions ||--|| baton_state : has_one
+    missions ||--o{ events : logs

@@ -42,12 +42,12 @@ Think: air traffic control + strategy game HUD + Figma-level polish.
   - Causal Graph
   - Timeline
   - Export / Packs
-  - Settings
 - Top HUD:
   - Mission name
   - Baton holder pill + queue length
   - Total energy + per-agent energy
-  - Connection status (Backend + MCP)
+  - Structural continuity score
+  - Connection status indicator
 - Right Inspector (resizable):
   - Context-sensitive details of selected entity/node/event
 
@@ -56,8 +56,6 @@ Think: air traffic control + strategy game HUD + Figma-level polish.
 - Mission title + status (Idle / Running / Paused / Exported)
 - CTA buttons:
   - Load demo mission
-  - Start simulation
-  - Connect MCP agents
   - Export Mission Pack
 
 **Squad strip**
@@ -130,12 +128,9 @@ Think: air traffic control + strategy game HUD + Figma-level polish.
 
 ### Screen E: Export / Mission Packs
 - Export:
-  - snapshot + graph + event log
-  - optional HTML summary
+  - importable mission-pack zip
 - Import:
   - load a pack and open in replay mode
-- “Share”
-  - generate a single-file `report.html` for stakeholders
 
 ---
 
@@ -152,8 +147,7 @@ Think: air traffic control + strategy game HUD + Figma-level polish.
 ### Empty states
 - Always show a clear next action:
   - “Load demo mission”
-  - “Connect MCP”
-  - “Start simulation”
+  - “Import mission pack”
 
 ---
 
@@ -188,7 +182,6 @@ Think: air traffic control + strategy game HUD + Figma-level polish.
 - Include Playwright smoke tests that:
   - load home page
   - load demo mission
-  - start simulation
   - verify baton holder updates at least once
   - verify at least 10 events rendered in timeline
 - Generate screenshots to `assets/ui/`:

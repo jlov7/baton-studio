@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-ENTITY_TYPES: list[dict] = [
+ENTITY_TYPES: list[dict[str, object]] = [
     {
         "type_name": "PlanStep",
         "json_schema": {
@@ -15,7 +15,12 @@ ENTITY_TYPES: list[dict] = [
         },
         "invariants": [
             {"rule": "required_fields", "fields": ["title", "status"], "severity": "hard"},
-            {"rule": "enum", "field": "status", "values": ["draft", "active", "done"], "severity": "hard"},
+            {
+                "rule": "enum",
+                "field": "status",
+                "values": ["draft", "active", "done"],
+                "severity": "hard",
+            },
         ],
     },
     {
@@ -65,8 +70,12 @@ ENTITY_TYPES: list[dict] = [
         },
         "invariants": [
             {"rule": "required_fields", "fields": ["filename", "language"], "severity": "hard"},
-            {"rule": "positive_number", "field": "lines_of_code", "severity": "soft",
-             "message": "lines_of_code should be positive"},
+            {
+                "rule": "positive_number",
+                "field": "lines_of_code",
+                "severity": "soft",
+                "message": "lines_of_code should be positive",
+            },
         ],
     },
 ]

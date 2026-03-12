@@ -14,8 +14,7 @@ Goal: get a visceral “wow” in < 4 minutes.
   - energy pool
   - live status
 
-## Act 2 — Start simulation (60s)
-- Click **Start simulation**
+## Act 2 — Demo mission activity (60s)
 - Narrate:
   - agents explore in parallel
   - they propose patches

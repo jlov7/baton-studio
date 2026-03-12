@@ -1,37 +1,53 @@
 # Troubleshooting
 
-## Backend won't start
-- Ensure Python 3.11+ and [uv](https://docs.astral.sh/uv/) are installed
-- `cd backend && uv sync --dev && uv run uvicorn baton_substrate.api.main:app --reload --port 8787`
+## Backend will not start
 
-## Frontend won't start
-- Ensure Node 20+ and [pnpm](https://pnpm.io/) are installed
-- `cd frontend && pnpm install && pnpm dev`
+- Confirm Python 3.11+ and `uv` are installed.
+- Run `cd backend && uv sync --dev`.
+- Start the API directly with `uv run uvicorn baton_substrate.api.main:app --reload --port 8787`.
+
+## Frontend will not start
+
+- Confirm Node 20+ and `pnpm` are installed.
+- Run `cd frontend && pnpm install --frozen-lockfile`.
+- Start the UI directly with `pnpm dev`.
 
 ## UI shows "Backend Offline"
-- Backend must be running on port 8787
-- Confirm `GET http://localhost:8787/health` returns `{"ok": true}`
-- The UI defaults to `NEXT_PUBLIC_API_URL=http://localhost:8787`
 
-## WebSocket not updating
-- Ensure UI connects to `ws://localhost:8787/ws?mission_id=...`
-- Check browser console for WS errors
-- The UI defaults to `NEXT_PUBLIC_WS_URL=ws://localhost:8787`
+- Confirm `http://localhost:8787/health` returns `{"ok": true}`.
+- The frontend defaults to `NEXT_PUBLIC_API_URL=http://localhost:8787`.
+- If you changed ports, restart the frontend with matching `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_WS_URL`.
 
-## MCP server "Connection closed"
-- Confirm MCP server runs under stdio transport
-- Ensure `claude mcp list` shows baton server healthy
-- Backend must be running before the MCP server can proxy calls
+## `make check` fails on a fresh clone
 
-## Agent teams not appearing
-- Ensure `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
-- Try in-process mode first (no tmux)
+- `make check` installs backend dev dependencies, frontend dependencies, and MCP test dependencies automatically.
+- If it still fails, rerun the failing subcommand directly to isolate the surface:
 
-## Graph rendering slow
-- Limit node count by filtering with the lens dropdown
-- The timeline virtualizes large event lists automatically
+```bash
+cd backend && uv sync --extra dev && uv run pytest -q
+cd frontend && pnpm install --frozen-lockfile && pnpm lint && pnpm typecheck
+cd mcp_server && uv sync --extra dev && uv run pytest -q
+```
 
-## Tests failing
-- Backend: `cd backend && uv sync --dev && uv run pytest -v`
-- Frontend lint: `cd frontend && pnpm lint && pnpm typecheck`
-- E2E: Start `make dev` first, then `make e2e`
+## `make e2e` fails before tests start
+
+- Make sure ports `3000` and `8787` are free, or stop any conflicting local servers.
+- Install Playwright browsers if this machine has never run the suite:
+
+```bash
+cd frontend && pnpm exec playwright install chromium
+```
+
+- `make e2e` starts its own backend and frontend and uses `dist/playwright-e2e.sqlite` for test isolation.
+
+## MCP server exits or cannot connect
+
+- Start the backend first with `make dev`.
+- Run the server directly with `uv run --project mcp_server baton-mcp-server`.
+- If the backend is elsewhere, set `BATON_BACKEND_URL`.
+
+## Demo mission or exports look empty
+
+- Load the demo mission from Mission Control before opening World, Graph, or Timeline.
+- Mission-pack exports are `.zip` files containing `mission_pack.json`.
+- Imported mission packs appear in the same UI flow as live demo missions.

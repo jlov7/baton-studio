@@ -1,4 +1,5 @@
 """Tests for the invariant validation engine (no DB required)."""
+
 from __future__ import annotations
 
 from baton_substrate.invariants.builtin import check_required_id, check_type_registered
@@ -10,6 +11,7 @@ from baton_substrate.invariants.engine import (
 
 
 # --- Schema validation ---
+
 
 def test_schema_valid() -> None:
     schema = {"type": "object", "properties": {"title": {"type": "string"}}, "required": ["title"]}
@@ -36,6 +38,7 @@ def test_empty_schema_passes() -> None:
 
 
 # --- Invariant rules ---
+
 
 def test_required_fields_present() -> None:
     inv = [{"rule": "required_fields", "fields": ["title", "status"], "severity": "hard"}]
@@ -79,12 +82,22 @@ def test_positive_number_not_present_skips() -> None:
 
 
 def test_max_length_within() -> None:
-    inv = [{"rule": "max_length", "field": "name", "max": 10, "severity": "soft", "message": "too long"}]
+    inv = [
+        {
+            "rule": "max_length",
+            "field": "name",
+            "max": 10,
+            "severity": "soft",
+            "message": "too long",
+        }
+    ]
     assert validate_invariants({"name": "short"}, inv) == []
 
 
 def test_max_length_exceeded() -> None:
-    inv = [{"rule": "max_length", "field": "name", "max": 5, "severity": "soft", "message": "too long"}]
+    inv = [
+        {"rule": "max_length", "field": "name", "max": 5, "severity": "soft", "message": "too long"}
+    ]
     violations = validate_invariants({"name": "toolongname"}, inv)
     assert len(violations) == 1
 
@@ -102,6 +115,7 @@ def test_enum_invalid_value() -> None:
 
 
 # --- Builtin checks ---
+
 
 def test_check_required_id_valid() -> None:
     assert check_required_id({}, "entity-1") == []
@@ -130,6 +144,7 @@ def test_check_type_registered_unknown() -> None:
 
 # --- Combined check_patch_op ---
 
+
 def test_check_patch_op_all_pass() -> None:
     schema = {"type": "object", "properties": {"title": {"type": "string"}}, "required": ["title"]}
     invariants = [{"rule": "required_fields", "fields": ["title"], "severity": "hard"}]
@@ -139,7 +154,15 @@ def test_check_patch_op_all_pass() -> None:
 
 def test_check_patch_op_schema_and_invariant_failures() -> None:
     schema = {"type": "object", "properties": {"title": {"type": "string"}}, "required": ["title"]}
-    invariants = [{"rule": "max_length", "field": "title", "max": 3, "severity": "soft", "message": "too long"}]
+    invariants = [
+        {
+            "rule": "max_length",
+            "field": "title",
+            "max": 3,
+            "severity": "soft",
+            "message": "too long",
+        }
+    ]
     violations = check_patch_op({"title": "toolong"}, schema, invariants)
     assert len(violations) == 1
     assert violations[0].code == "max_length"

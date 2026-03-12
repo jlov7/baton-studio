@@ -38,7 +38,9 @@ test("nav rail navigates between pages", async ({ page }) => {
 
 test("top HUD shows no mission initially", async ({ page }) => {
   await page.goto("/mission");
-  await expect(page.getByText("No Mission")).toBeVisible();
+  await expect(
+    page.locator("header").getByText("No Mission", { exact: true }),
+  ).toBeVisible();
 });
 
 test("Baton Studio branding visible", async ({ page }) => {

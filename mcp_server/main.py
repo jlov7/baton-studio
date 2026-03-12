@@ -281,6 +281,11 @@ async def main() -> None:
         await server.run(read_stream, write_stream, server.create_initialization_options())
 
 
-if __name__ == "__main__":
+def cli() -> None:
     import asyncio
+
     asyncio.run(main())
+
+
+if __name__ == "__main__":
+    cli()

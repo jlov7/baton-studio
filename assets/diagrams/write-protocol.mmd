@@ -1,0 +1,35 @@
+sequenceDiagram
+    actor A as Agent
+    participant B as Substrate Server
+    participant BT as Baton State
+    participant W as World Model
+    participant EL as Event Log
+
+    Note over A,EL: Phase 1 - Propose (no baton required)
+
+    A->>B: POST /patches/propose
+    B->>W: validate schema + soft invariants
+    W-->>B: violations[]
+    B->>EL: emit patch.proposed
+    B-->>A: proposal_id + violations
+
+    Note over A,EL: Phase 2 - Acquire baton
+
+    A->>B: POST /baton/claim
+    B->>BT: enqueue or grant
+    BT-->>B: holder + queue + lease_expires_at
+    B->>EL: emit baton.claimed
+    B-->>A: baton state
+
+    Note over A,EL: Phase 3 - Commit (baton required)
+
+    A->>B: POST /patches/commit
+    B->>BT: verify holder == actor_id
+    B->>W: enforce hard invariants
+    B->>W: create entity version(s)
+    B->>EL: emit patch.committed
+    B-->>A: committed + new_versions
+
+    A->>B: POST /baton/release
+    B->>BT: release + auto-grant next waiter
+    B->>EL: emit baton.released

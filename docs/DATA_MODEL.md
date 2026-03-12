@@ -98,9 +98,7 @@ PK (mission_id, actor_id)
 ---
 
 ## Exports (“Mission Pack”)
-A mission pack is a folder (and zipped file) containing:
-- mission.json
-- world_snapshot.json
-- causal_graph.json
-- events.ndjson
-- schemas.json
+A mission pack is a `.zip` archive containing:
+- `mission_pack.json`
+
+The JSON payload includes mission metadata, registered entity types, entity versions, causal nodes and edges, energy accounts, patches, and the append-only event log needed for replay/import.

@@ -1,4 +1,5 @@
 """Tests for causal graph operations and invalidation."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -10,14 +11,16 @@ from baton_substrate.services import causal_service
 
 
 async def _seed_mission(db: AsyncSession, mid: str = "mis_test") -> str:
-    db.add(MissionRow(
-        mission_id=mid,
-        created_at=datetime.now(timezone.utc).isoformat(),
-        title="Test",
-        goal="",
-        energy_budget=1000,
-        status="idle",
-    ))
+    db.add(
+        MissionRow(
+            mission_id=mid,
+            created_at=datetime.now(timezone.utc).isoformat(),
+            title="Test",
+            goal="",
+            energy_budget=1000,
+            status="idle",
+        )
+    )
     await db.flush()
     return mid
 

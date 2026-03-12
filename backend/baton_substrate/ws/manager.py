@@ -24,7 +24,7 @@ class ConnectionManager:
                 if not conns:
                     del self._connections[mission_id]
 
-    async def broadcast(self, mission_id: str, message: dict) -> None:
+    async def broadcast(self, mission_id: str, message: dict[str, object]) -> None:
         async with self._lock:
             conns = list(self._connections.get(mission_id, []))
         dead: list[WebSocket] = []

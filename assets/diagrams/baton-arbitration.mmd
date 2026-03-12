@@ -1,0 +1,10 @@
+stateDiagram-v2
+    [*] --> Free
+
+    Free --> Held : claim(actor_id)\ngrant lease immediately
+    Held --> Free : release()\nor lease timeout
+    Held --> Held : refresh_lease()
+
+    Held --> Queued : claim(actor_id)\nwhen another actor holds
+    Queued --> Held : holder releases\nnext in FIFO queue granted
+    Queued --> Free : cancel claim

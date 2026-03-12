@@ -21,9 +21,7 @@ def _iso(dt: datetime) -> str:
 
 
 async def _get_state(db: AsyncSession, mission_id: str) -> BatonStateRow:
-    result = await db.execute(
-        select(BatonStateRow).where(BatonStateRow.mission_id == mission_id)
-    )
+    result = await db.execute(select(BatonStateRow).where(BatonStateRow.mission_id == mission_id))
     row = result.scalar_one_or_none()
     if not row:
         raise ValueError(f"No baton state for mission {mission_id}")
@@ -57,7 +55,10 @@ async def _auto_release_if_expired(db: AsyncSession, row: BatonStateRow) -> bool
         await db.flush()
         actor = Actor(actor_id="system", actor_type="system", display_name="System")
         await event_service.emit(
-            db, row.mission_id, "baton.timeout", actor,
+            db,
+            row.mission_id,
+            "baton.timeout",
+            actor,
             {"expired_holder": old_holder, "new_holder": row.holder_actor_id},
         )
         return True
@@ -80,7 +81,10 @@ async def claim(
         row.lease_expires_at = _iso(_now() + timedelta(milliseconds=lease_ms))
         await db.flush()
         await event_service.emit(
-            db, mission_id, "baton.claimed", actor,
+            db,
+            mission_id,
+            "baton.claimed",
+            actor,
             {"holder": actor_id},
         )
     elif row.holder_actor_id != actor_id:
@@ -90,7 +94,10 @@ async def claim(
             row.queue_json = json.dumps(queue)
             await db.flush()
             await event_service.emit(
-                db, mission_id, "baton.queued", actor,
+                db,
+                mission_id,
+                "baton.queued",
+                actor,
                 {"position": len(queue)},
             )
 
@@ -127,7 +134,10 @@ async def release(
         row.queue_json = json.dumps(queue)
         row.lease_expires_at = _iso(_now() + timedelta(milliseconds=20_000))
         await event_service.emit(
-            db, mission_id, "baton.transferred", actor,
+            db,
+            mission_id,
+            "baton.transferred",
+            actor,
             {"from": actor_id, "to": next_holder},
         )
     else:
@@ -137,7 +147,10 @@ async def release(
 
     await db.flush()
     await event_service.emit(
-        db, mission_id, "baton.released", actor,
+        db,
+        mission_id,
+        "baton.released",
+        actor,
         {"released_by": actor_id, "new_holder": row.holder_actor_id},
     )
 

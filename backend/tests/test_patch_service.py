@@ -1,4 +1,5 @@
 """Tests for patch propose and commit flow with invariant checks."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -11,19 +12,27 @@ from baton_substrate.services import patch_service, world_service
 
 
 async def _seed(db: AsyncSession, mid: str = "mis_test") -> str:
-    db.add(MissionRow(
-        mission_id=mid,
-        created_at=datetime.now(timezone.utc).isoformat(),
-        title="Test",
-        goal="",
-        energy_budget=1000,
-        status="idle",
-    ))
+    db.add(
+        MissionRow(
+            mission_id=mid,
+            created_at=datetime.now(timezone.utc).isoformat(),
+            title="Test",
+            goal="",
+            energy_budget=1000,
+            status="idle",
+        )
+    )
     db.add(BatonStateRow(mission_id=mid, holder_actor_id=None, queue_json="[]"))
     await db.flush()
     await world_service.register_entity_type(
-        db, mid, "Evidence",
-        json_schema={"type": "object", "properties": {"claim": {"type": "string"}}, "required": ["claim"]},
+        db,
+        mid,
+        "Evidence",
+        json_schema={
+            "type": "object",
+            "properties": {"claim": {"type": "string"}},
+            "required": ["claim"],
+        },
         invariants=[{"rule": "required_fields", "fields": ["claim"], "severity": "hard"}],
     )
     return mid
@@ -31,7 +40,9 @@ async def _seed(db: AsyncSession, mid: str = "mis_test") -> str:
 
 async def test_propose_valid_patch(db: AsyncSession) -> None:
     mid = await _seed(db)
-    patch = Patch(ops=[PatchOp(op="upsert", type="Evidence", id="ev-1", value={"claim": "Earth is round"})])
+    patch = Patch(
+        ops=[PatchOp(op="upsert", type="Evidence", id="ev-1", value={"claim": "Earth is round"})]
+    )
     result = await patch_service.propose(db, mid, "agent-a", patch)
     assert result.accepted is True
     assert result.violations == []

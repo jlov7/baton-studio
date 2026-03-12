@@ -2,7 +2,7 @@
 
 ## Product
 - [ ] First run: loads a demo mission in one click
-- [ ] Start simulation: baton holder changes at least once
+- [ ] Demo mission load: baton holder changes at least once
 - [ ] World Model view: shows typed entities + version history
 - [ ] Causal Graph view: shows nodes + edges, clickable inspector
 - [ ] Timeline view: shows events + scrub replay
@@ -10,9 +10,9 @@
 
 ## Engineering
 - [ ] `make dev` works
-- [ ] `make check` passes (backend + frontend)
-- [ ] `make e2e` passes (Playwright smoke tests)
-- [ ] `make demo` generates artifacts in `dist/`
+- [ ] `make check` passes (backend + frontend + MCP smoke tests)
+- [ ] `make e2e` passes and refreshes screenshots in `assets/ui/`
+- [ ] `make demo` generates `dist/demo_pack.zip`
 
 ## Integration
 - [ ] Claude Code can add MCP server (stdio)

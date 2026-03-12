@@ -19,7 +19,11 @@ async def list_agents(mission_id: str) -> list[AgentDetail]:
 async def register_agent(mission_id: str, req: RegisterAgentRequest) -> AgentDetail:
     async with get_db() as db:
         agent = await agent_service.register(
-            db, mission_id, req.actor_id, req.display_name, req.role,
+            db,
+            mission_id,
+            req.actor_id,
+            req.display_name,
+            req.role,
         )
         await energy_service.auto_allocate(db, mission_id, req.actor_id)
         bal = await energy_service.get_balance(db, mission_id, req.actor_id)

@@ -39,9 +39,7 @@ async def propose(
 
         if op.op == "upsert" and op.type in type_map:
             et = type_map[op.type]
-            all_violations.extend(
-                check_patch_op(op.value, et.json_schema, et.invariants)
-            )
+            all_violations.extend(check_patch_op(op.value, et.json_schema, et.invariants))
 
     has_hard = any(v.severity == "hard" for v in all_violations)
     status = "rejected" if has_hard else "pending"
@@ -62,7 +60,10 @@ async def propose(
     actor = Actor(actor_id=actor_id, actor_type="agent", display_name=actor_id)
     event_type = "patch.proposed" if accepted else "patch.rejected"
     await event_service.emit(
-        db, mission_id, event_type, actor,
+        db,
+        mission_id,
+        event_type,
+        actor,
         {
             "proposal_id": proposal_id,
             "accepted": accepted,
@@ -94,7 +95,9 @@ async def commit(
     if not row:
         return CommitPatchResponse(committed=False, message="Proposal not found")
     if row.status != "pending":
-        return CommitPatchResponse(committed=False, message=f"Proposal status is '{row.status}', expected 'pending'")
+        return CommitPatchResponse(
+            committed=False, message=f"Proposal status is '{row.status}', expected 'pending'"
+        )
 
     patch_data = json.loads(row.patch_json)
     patch = Patch(**patch_data)
@@ -103,7 +106,12 @@ async def commit(
     for op in patch.ops:
         if op.op == "upsert":
             version = await world_service.upsert_entity(
-                db, mission_id, op.id, op.type, op.value, actor_id,
+                db,
+                mission_id,
+                op.id,
+                op.type,
+                op.value,
+                actor_id,
             )
             new_versions.append({"entity_id": op.id, "type": op.type, "version": version})
         elif op.op == "delete":
@@ -114,7 +122,10 @@ async def commit(
 
     actor = Actor(actor_id=actor_id, actor_type="agent", display_name=actor_id)
     await event_service.emit(
-        db, mission_id, "patch.committed", actor,
+        db,
+        mission_id,
+        "patch.committed",
+        actor,
         {"proposal_id": proposal_id, "new_versions": new_versions},
     )
 

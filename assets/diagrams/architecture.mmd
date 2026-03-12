@@ -1,0 +1,35 @@
+flowchart TB
+    subgraph Clients["Clients"]
+        CC["Claude Code\n(real MCP agents)"]
+        DEMO["Demo Simulator\n(one-click scripted mission)"]
+    end
+
+    subgraph MCP["MCP Server (stdio)"]
+        TOOLS["baton.* tools\nhealth · read_world · propose_patch\nclaim_baton · commit_patch · energy_spend"]
+    end
+
+    subgraph Backend["Substrate Server (FastAPI :8787)"]
+        API["REST API"]
+        WSS["WebSocket /ws"]
+        SVC["Services\nMission · World · Baton · Energy · Causal · Export"]
+        INV["Invariant Engine"]
+        DB[("SQLite\nWorld Model · Causal Graph\nEnergy Pool · Baton State · Event Log")]
+        API --> SVC
+        WSS --> SVC
+        SVC --> INV
+        SVC --> DB
+    end
+
+    subgraph UI["Control Room UI (Next.js :3000)"]
+        MC["Mission Control"]
+        WM["World Model"]
+        CG["Causal Graph"]
+        TL["Timeline"]
+        EX["Export / Mission Packs"]
+    end
+
+    CC -->|"MCP stdio"| MCP
+    DEMO -->|"HTTP"| Backend
+    MCP -->|"HTTP"| Backend
+    UI -->|"HTTP + WebSocket"| Backend
+    Backend -->|"WS events"| UI

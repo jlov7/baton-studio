@@ -38,11 +38,10 @@ async def register_entity_type(
 
 
 async def list_entity_types(
-    db: AsyncSession, mission_id: str,
+    db: AsyncSession,
+    mission_id: str,
 ) -> list[EntityTypeSchema]:
-    result = await db.execute(
-        select(EntityTypeRow).where(EntityTypeRow.mission_id == mission_id)
-    )
+    result = await db.execute(select(EntityTypeRow).where(EntityTypeRow.mission_id == mission_id))
     rows = result.scalars().all()
     return [
         EntityTypeSchema(
@@ -55,7 +54,9 @@ async def list_entity_types(
 
 
 async def get_entity_type(
-    db: AsyncSession, mission_id: str, type_name: str,
+    db: AsyncSession,
+    mission_id: str,
+    type_name: str,
 ) -> EntityTypeRow | None:
     result = await db.execute(
         select(EntityTypeRow).where(
@@ -99,6 +100,7 @@ async def upsert_entity(
     next_version = max_v.scalar_one() + 1
 
     from datetime import datetime, timezone
+
     ver = EntityVersionRow(
         mission_id=mission_id,
         entity_id=entity_id,
@@ -113,7 +115,9 @@ async def upsert_entity(
 
 
 async def delete_entity(
-    db: AsyncSession, mission_id: str, entity_id: str,
+    db: AsyncSession,
+    mission_id: str,
+    entity_id: str,
 ) -> bool:
     result = await db.execute(
         select(EntityRow).where(
@@ -130,13 +134,12 @@ async def delete_entity(
 
 
 async def get_world_snapshot(
-    db: AsyncSession, mission_id: str,
+    db: AsyncSession,
+    mission_id: str,
 ) -> WorldSnapshot:
     types = await list_entity_types(db, mission_id)
 
-    entity_result = await db.execute(
-        select(EntityRow).where(EntityRow.mission_id == mission_id)
-    )
+    entity_result = await db.execute(select(EntityRow).where(EntityRow.mission_id == mission_id))
     entity_rows = entity_result.scalars().all()
 
     entities: list[EntityDetail] = []

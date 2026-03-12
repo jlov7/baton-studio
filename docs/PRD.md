@@ -82,13 +82,12 @@ Baton Studio is a productized, hands-on prototype for the *next coordination par
 
 ### Journey 1 — 1-click demo (no keys)
 1. Open UI → click **Load demo mission**
-2. Click **Start simulation**
-3. Watch 4 simulated agents contend for baton while building a plan
-4. Inspect:
+2. Watch 4 simulated agents contend for baton while building a plan
+3. Inspect:
    - rejected invariant violations
    - causal lineage of a key decision
    - energy spend by agent
-5. Export Mission Pack
+4. Export Mission Pack
 
 ### Journey 2 — Real agents via MCP (Claude Code)
 1. Run backend + UI + MCP server

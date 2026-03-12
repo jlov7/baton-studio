@@ -4,6 +4,8 @@ import argparse
 import asyncio
 from pathlib import Path
 
+DEMO_PACK_NAME = "demo_pack.zip"
+
 
 async def _run(out_dir: Path) -> None:
     from baton_substrate.demo.simulator import run_demo
@@ -17,7 +19,7 @@ async def _run(out_dir: Path) -> None:
         pack_bytes = await export_service.export_mission_pack(db, mission_id)
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    pack_path = out_dir / f"{mission_id}.zip"
+    pack_path = out_dir / DEMO_PACK_NAME
     pack_path.write_bytes(pack_bytes)
     print(f"Wrote mission pack to {pack_path.resolve()}")
 

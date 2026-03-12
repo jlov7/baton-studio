@@ -1,7 +1,7 @@
 """Tests for baton claim/release/queue/expiration logic."""
+
 from __future__ import annotations
 
-import json
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,14 +11,16 @@ from baton_substrate.services import baton_service
 
 
 async def _seed_mission(db: AsyncSession, mid: str = "mis_test") -> str:
-    db.add(MissionRow(
-        mission_id=mid,
-        created_at=datetime.now(timezone.utc).isoformat(),
-        title="Test",
-        goal="",
-        energy_budget=1000,
-        status="idle",
-    ))
+    db.add(
+        MissionRow(
+            mission_id=mid,
+            created_at=datetime.now(timezone.utc).isoformat(),
+            title="Test",
+            goal="",
+            energy_budget=1000,
+            status="idle",
+        )
+    )
     db.add(BatonStateRow(mission_id=mid, holder_actor_id=None, queue_json="[]"))
     await db.flush()
     return mid
@@ -85,9 +87,8 @@ async def test_auto_release_on_expired_lease(db: AsyncSession) -> None:
     await baton_service.claim(db, mid, "agent-a")
     # Manually expire the lease
     from sqlalchemy import select
-    result = await db.execute(
-        select(BatonStateRow).where(BatonStateRow.mission_id == mid)
-    )
+
+    result = await db.execute(select(BatonStateRow).where(BatonStateRow.mission_id == mid))
     row = result.scalar_one()
     row.lease_expires_at = (datetime.now(timezone.utc) - timedelta(seconds=5)).isoformat()
     await db.flush()
@@ -102,9 +103,8 @@ async def test_auto_release_promotes_queued_on_timeout(db: AsyncSession) -> None
     await baton_service.claim(db, mid, "agent-b")
     # Expire agent-a's lease
     from sqlalchemy import select
-    result = await db.execute(
-        select(BatonStateRow).where(BatonStateRow.mission_id == mid)
-    )
+
+    result = await db.execute(select(BatonStateRow).where(BatonStateRow.mission_id == mid))
     row = result.scalar_one()
     row.lease_expires_at = (datetime.now(timezone.utc) - timedelta(seconds=5)).isoformat()
     await db.flush()

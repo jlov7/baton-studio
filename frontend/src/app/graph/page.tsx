@@ -61,7 +61,7 @@ export default function GraphPage() {
     return (
       <EmptyState
         title="Causal Graph Empty"
-        description="Run the simulation to build causal relationships between entities."
+        description="Load a demo mission or import a mission pack to build causal relationships between entities."
       />
     );
   }

@@ -1,4 +1,5 @@
 """Integration tests: full lifecycle through the HTTP API."""
+
 from __future__ import annotations
 
 import pytest
@@ -34,6 +35,7 @@ async def client() -> AsyncClient:  # type: ignore[misc]
 
     # Monkey-patch the db module
     import baton_substrate.db.engine as db_engine
+
     original_get_db = db_engine.get_db
     db_engine.get_db = override_get_db
 
@@ -55,7 +57,9 @@ async def test_health(client: AsyncClient) -> None:
 
 
 async def test_create_and_get_mission(client: AsyncClient) -> None:
-    resp = await client.post("/missions", json={"title": "Test Mission", "goal": "test", "energy_budget": 500})
+    resp = await client.post(
+        "/missions", json={"title": "Test Mission", "goal": "test", "energy_budget": 500}
+    )
     assert resp.status_code == 200
     data = resp.json()
     assert data["title"] == "Test Mission"
@@ -73,7 +77,10 @@ async def test_full_lifecycle(client: AsyncClient) -> None:
     mid = resp.json()["mission_id"]
 
     # Register agent
-    resp = await client.post(f"/missions/{mid}/agents", json={"actor_id": "atlas", "display_name": "Atlas", "role": "researcher"})
+    resp = await client.post(
+        f"/missions/{mid}/agents",
+        json={"actor_id": "atlas", "display_name": "Atlas", "role": "researcher"},
+    )
     assert resp.status_code == 200
 
     # Check energy

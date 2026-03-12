@@ -21,12 +21,17 @@ async def get_balance(mission_id: str, actor_id: str) -> EnergyBalanceResponse:
 
 @router.post("/spend", response_model=EnergySpendResponse)
 async def spend_energy(
-    mission_id: str, req: EnergySpendRequest,
+    mission_id: str,
+    req: EnergySpendRequest,
 ) -> EnergySpendResponse:
     async with get_db() as db:
         try:
             return await energy_service.spend(
-                db, mission_id, req.actor_id, req.amount, req.reason,
+                db,
+                mission_id,
+                req.actor_id,
+                req.amount,
+                req.reason,
             )
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))

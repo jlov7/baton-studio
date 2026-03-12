@@ -29,9 +29,7 @@ async def compute_sc(db: AsyncSession, mission_id: str) -> SCMetricResponse:
     i_count = stale_result.scalar_one()
 
     total_patches = await db.execute(
-        select(func.count())
-        .select_from(PatchRow)
-        .where(PatchRow.mission_id == mission_id)
+        select(func.count()).select_from(PatchRow).where(PatchRow.mission_id == mission_id)
     )
     total = total_patches.scalar_one()
     r_count = max(0, total - v_count * 2) if total > 0 else 0

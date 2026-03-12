@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from baton_substrate.db import get_db
-from baton_substrate.models.event import EventListResponse, EventQuery
+from baton_substrate.models.event import EventListResponse
 from baton_substrate.services import event_service
 
 router = APIRouter(prefix="/missions/{mission_id}/events", tags=["events"])
@@ -18,6 +18,10 @@ async def get_events(
 ) -> EventListResponse:
     async with get_db() as db:
         events, cursor = await event_service.query(
-            db, mission_id, after=after, event_type=type, limit=limit,
+            db,
+            mission_id,
+            after=after,
+            event_type=type,
+            limit=limit,
         )
         return EventListResponse(events=events, cursor=cursor)

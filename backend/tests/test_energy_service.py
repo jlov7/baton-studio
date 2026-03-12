@@ -1,4 +1,5 @@
 """Tests for energy allocation, spending, and balance checks."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -11,14 +12,16 @@ from baton_substrate.services import energy_service
 
 
 async def _seed_mission(db: AsyncSession, mid: str = "mis_test", budget: int = 1000) -> str:
-    db.add(MissionRow(
-        mission_id=mid,
-        created_at=datetime.now(timezone.utc).isoformat(),
-        title="Test",
-        goal="",
-        energy_budget=budget,
-        status="idle",
-    ))
+    db.add(
+        MissionRow(
+            mission_id=mid,
+            created_at=datetime.now(timezone.utc).isoformat(),
+            title="Test",
+            goal="",
+            energy_budget=budget,
+            status="idle",
+        )
+    )
     await db.flush()
     return mid
 
@@ -32,7 +35,7 @@ async def test_get_or_create_account(db: AsyncSession) -> None:
 
 async def test_get_or_create_returns_existing(db: AsyncSession) -> None:
     mid = await _seed_mission(db)
-    acct1 = await energy_service.get_or_create_account(db, mid, "agent-a")
+    await energy_service.get_or_create_account(db, mid, "agent-a")
     await energy_service.allocate(db, mid, "agent-a", 100)
     acct2 = await energy_service.get_or_create_account(db, mid, "agent-a")
     assert acct2.balance == 100

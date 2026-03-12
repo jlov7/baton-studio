@@ -67,7 +67,7 @@ export default function TimelinePage() {
     return (
       <EmptyState
         title="No Events Yet"
-        description="Start the simulation to generate events."
+        description="Load a demo mission or import a mission pack to view the event stream."
       />
     );
   }

@@ -1,4 +1,5 @@
 """Tests for SC metric computation."""
+
 from __future__ import annotations
 
 import math
@@ -12,19 +13,27 @@ from baton_substrate.services import causal_service, metrics_service, patch_serv
 
 
 async def _seed(db: AsyncSession, mid: str = "mis_test") -> str:
-    db.add(MissionRow(
-        mission_id=mid,
-        created_at=datetime.now(timezone.utc).isoformat(),
-        title="Test",
-        goal="",
-        energy_budget=1000,
-        status="idle",
-    ))
+    db.add(
+        MissionRow(
+            mission_id=mid,
+            created_at=datetime.now(timezone.utc).isoformat(),
+            title="Test",
+            goal="",
+            energy_budget=1000,
+            status="idle",
+        )
+    )
     db.add(BatonStateRow(mission_id=mid, holder_actor_id=None, queue_json="[]"))
     await db.flush()
     await world_service.register_entity_type(
-        db, mid, "Evidence",
-        json_schema={"type": "object", "properties": {"claim": {"type": "string"}}, "required": ["claim"]},
+        db,
+        mid,
+        "Evidence",
+        json_schema={
+            "type": "object",
+            "properties": {"claim": {"type": "string"}},
+            "required": ["claim"],
+        },
         invariants=[{"rule": "required_fields", "fields": ["claim"], "severity": "hard"}],
     )
     return mid

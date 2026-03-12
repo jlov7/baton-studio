@@ -1,6 +1,4 @@
 from __future__ import annotations
-
-import json
 from typing import Any
 
 from baton_substrate.models.common import Violation
@@ -14,6 +12,7 @@ def validate_against_schema(
         return []
     try:
         import jsonschema
+
         jsonschema.validate(instance=value, schema=json_schema)
     except jsonschema.ValidationError as e:
         return [Violation(severity="hard", code="schema_violation", message=str(e.message))]
@@ -35,7 +34,11 @@ def validate_invariants(
             for f in fields:
                 if f not in value or value[f] is None or value[f] == "":
                     violations.append(
-                        Violation(severity=severity, code="required_field_missing", message=f"Missing required field: {f}")
+                        Violation(
+                            severity=severity,
+                            code="required_field_missing",
+                            message=f"Missing required field: {f}",
+                        )
                     )
 
         elif rule == "positive_number":
@@ -43,9 +46,13 @@ def validate_invariants(
             if field in value:
                 try:
                     if float(value[field]) <= 0:
-                        violations.append(Violation(severity=severity, code="positive_number", message=message))
+                        violations.append(
+                            Violation(severity=severity, code="positive_number", message=message)
+                        )
                 except (ValueError, TypeError):
-                    violations.append(Violation(severity=severity, code="positive_number", message=message))
+                    violations.append(
+                        Violation(severity=severity, code="positive_number", message=message)
+                    )
 
         elif rule == "max_length":
             field = inv.get("field", "")
@@ -58,7 +65,11 @@ def validate_invariants(
             allowed = inv.get("values", [])
             if field in value and value[field] not in allowed:
                 violations.append(
-                    Violation(severity=severity, code="enum_violation", message=f"{field} must be one of {allowed}")
+                    Violation(
+                        severity=severity,
+                        code="enum_violation",
+                        message=f"{field} must be one of {allowed}",
+                    )
                 )
 
     return violations

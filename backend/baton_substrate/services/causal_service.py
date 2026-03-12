@@ -73,7 +73,10 @@ async def add_edge(
 
     actor = Actor(actor_id=actor_id, actor_type="agent", display_name=actor_id)
     await event_service.emit(
-        db, mission_id, "causal.edge_added", actor,
+        db,
+        mission_id,
+        "causal.edge_added",
+        actor,
         {"edge_id": edge_id, "from": from_id, "to": to_id, "type": edge_type},
     )
 
@@ -155,7 +158,10 @@ async def invalidate_downstream(
 
         actor = Actor(actor_id=actor_id, actor_type="agent", display_name=actor_id)
         await event_service.emit(
-            db, mission_id, "causal.invalidation", actor,
+            db,
+            mission_id,
+            "causal.invalidation",
+            actor,
             {"source": start_node_id, "invalidated": invalidated},
         )
 

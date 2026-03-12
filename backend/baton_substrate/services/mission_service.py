@@ -39,7 +39,10 @@ async def create_mission(
     db.add(baton)
     await db.flush()
     await event_service.emit(
-        db, mid, "mission.created", SYSTEM_ACTOR,
+        db,
+        mid,
+        "mission.created",
+        SYSTEM_ACTOR,
         {"title": title, "goal": goal, "energy_budget": energy_budget},
     )
     return MissionResponse(
@@ -75,7 +78,10 @@ async def update_status(db: AsyncSession, mission_id: str, status: str) -> Missi
     row.status = status
     await db.flush()
     await event_service.emit(
-        db, mission_id, "mission.status_changed", SYSTEM_ACTOR,
+        db,
+        mission_id,
+        "mission.status_changed",
+        SYSTEM_ACTOR,
         {"status": status},
     )
     return MissionResponse(

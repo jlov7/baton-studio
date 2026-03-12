@@ -1,0 +1,16 @@
+flowchart LR
+    E1(["Evidence\ncoordination-theory-2024"])
+    E2(["Evidence\nagent-efficiency-study"])
+    D1["Decision\nUse shared substrate"]
+    P1["PlanStep\nBuild World Model API"]
+    P2["PlanStep\nBuild Causal Graph API"]
+    P3["PlanStep\nVerify Integration Flow"]
+    V1{{"Invariant Violation\nmissing owner field"}}
+
+    E1 -->|supports| D1
+    E2 -->|supports| D1
+    D1 -->|depends_on| P1
+    D1 -->|depends_on| P2
+    P1 -->|depends_on| P3
+    P2 -->|depends_on| P3
+    E2 -->|contradicts| V1

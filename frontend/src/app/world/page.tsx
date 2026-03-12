@@ -48,7 +48,7 @@ export default function WorldPage() {
     return (
       <EmptyState
         title="World Model Empty"
-        description="Run the simulation to populate the shared world model."
+        description="Load a demo mission or import a mission pack to populate the shared world model."
       />
     );
   }

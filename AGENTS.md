@@ -9,12 +9,9 @@ This repository is an **end-to-end product build**. Follow these rules:
 
 ## Non-negotiables
 - `make dev` starts backend + frontend reliably.
-- `make check` runs format, lint, typecheck, unit tests.
-- `make e2e` runs Playwright smoke tests.
-- `make demo` runs a demo script and produces `dist/demo_pack.zip` containing:
-  - sample mission export
-  - sample causal graph export
-  - a saved HTML report screenshot bundle
+- `make check` runs backend format/lint/typecheck/tests, frontend lint/typecheck, and MCP smoke tests.
+- `make e2e` self-starts backend + frontend, runs Playwright, and refreshes screenshots under `assets/ui/`.
+- `make demo` runs a demo script and produces `dist/demo_pack.zip` plus a production frontend build.
 
 ## Tech constraints
 - Local-first by default:
