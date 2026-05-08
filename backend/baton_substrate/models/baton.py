@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ClaimBatonRequest(BaseModel):
-    actor_id: str
-    lease_ms: int = 20_000
+    actor_id: str = Field(min_length=1)
+    lease_ms: int = Field(default=20_000, gt=0, le=300_000)
 
 
 class BatonStateResponse(BaseModel):
@@ -15,4 +15,4 @@ class BatonStateResponse(BaseModel):
 
 
 class ReleaseBatonRequest(BaseModel):
-    actor_id: str
+    actor_id: str = Field(min_length=1)

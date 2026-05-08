@@ -67,6 +67,19 @@ async def test_auto_allocate_second_agent(db: AsyncSession) -> None:
     assert balance == 500  # 1000 // (1 existing + 1)
 
 
+async def test_auto_allocate_rebalances_without_exceeding_budget(db: AsyncSession) -> None:
+    mid = await _seed_mission(db, budget=1000)
+    for actor_id in ["agent-a", "agent-b", "agent-c", "agent-d"]:
+        await energy_service.auto_allocate(db, mid, actor_id)
+
+    balances = [
+        (await energy_service.get_balance(db, mid, actor_id)).balance
+        for actor_id in ["agent-a", "agent-b", "agent-c", "agent-d"]
+    ]
+    assert balances == [250, 250, 250, 250]
+    assert sum(balances) == 1000
+
+
 async def test_spend(db: AsyncSession) -> None:
     mid = await _seed_mission(db)
     await energy_service.allocate(db, mid, "agent-a", 100)

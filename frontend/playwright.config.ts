@@ -18,7 +18,7 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    baseURL: "http://127.0.0.1:3100",
     trace: "retain-on-failure",
   },
   webServer: [
@@ -35,8 +35,8 @@ export default defineConfig({
       timeout: 180_000,
     },
     {
-      command: `cd ${quote(frontendDir)} && pnpm install --frozen-lockfile && pnpm dev`,
-      url: "http://127.0.0.1:3000/mission",
+      command: `cd ${quote(frontendDir)} && pnpm install --frozen-lockfile && NEXT_PUBLIC_API_URL=http://127.0.0.1:8787 NEXT_PUBLIC_WS_URL=ws://127.0.0.1:8787 pnpm exec next dev -p 3100`,
+      url: "http://127.0.0.1:3100/mission",
       reuseExistingServer: !process.env.CI,
       timeout: 180_000,
     },

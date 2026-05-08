@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class EntityTypeSchema(BaseModel):
@@ -23,11 +23,11 @@ class EntityDetail(BaseModel):
     type_name: str
     latest_version: int
     value: dict[str, Any]
-    versions: list[EntityVersionDetail] = []
+    versions: list[EntityVersionDetail] = Field(default_factory=list)
 
 
 class WorldSnapshot(BaseModel):
     mission_id: str
-    entity_types: list[EntityTypeSchema]
-    entities: list[EntityDetail]
+    entity_types: list[EntityTypeSchema] = Field(default_factory=list)
+    entities: list[EntityDetail] = Field(default_factory=list)
     pending_proposals: int = 0

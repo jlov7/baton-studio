@@ -54,10 +54,9 @@ export default function WorldPage() {
   }
 
   return (
-    <div className="flex h-full">
-      {/* Left sidebar: entity type list */}
-      <div className="w-72 shrink-0 border-r border-white/[0.06] overflow-y-auto p-3">
-        <h2 className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3 px-3">
+    <div className="flex h-full flex-col md:flex-row">
+      <div className="max-h-72 shrink-0 overflow-y-auto border-b border-white/[0.08] p-3 md:max-h-none md:w-80 md:border-b-0 md:border-r">
+        <h2 className="mb-3 px-3 text-xs font-semibold uppercase text-zinc-500">
           Entity Types ({world.entity_types.length})
         </h2>
         <EntityTypeList
@@ -68,8 +67,7 @@ export default function WorldPage() {
         />
       </div>
 
-      {/* Center: selected entity detail */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6">
         {selectedEntity ? (
           <EntityDetailView entity={selectedEntity} />
         ) : (

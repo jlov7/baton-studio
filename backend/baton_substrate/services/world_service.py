@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import func, select
@@ -27,6 +28,13 @@ async def register_entity_type(
     json_schema: dict[str, Any] | None = None,
     invariants: list[dict[str, Any]] | None = None,
 ) -> None:
+    existing = await get_entity_type(db, mission_id, type_name)
+    if existing:
+        existing.json_schema = json.dumps(json_schema or {})
+        existing.invariants_json = json.dumps(invariants or [])
+        await db.flush()
+        return
+
     row = EntityTypeRow(
         mission_id=mission_id,
         type_name=type_name,
@@ -90,6 +98,10 @@ async def upsert_entity(
         )
         db.add(entity)
         await db.flush()
+    else:
+        entity.type_name = type_name
+        entity.deleted_at = None
+        entity.deleted_by = None
 
     max_v = await db.execute(
         select(func.coalesce(func.max(EntityVersionRow.version), 0)).where(
@@ -98,8 +110,6 @@ async def upsert_entity(
         )
     )
     next_version = max_v.scalar_one() + 1
-
-    from datetime import datetime, timezone
 
     ver = EntityVersionRow(
         mission_id=mission_id,
@@ -118,6 +128,7 @@ async def delete_entity(
     db: AsyncSession,
     mission_id: str,
     entity_id: str,
+    actor_id: str,
 ) -> bool:
     result = await db.execute(
         select(EntityRow).where(
@@ -128,7 +139,27 @@ async def delete_entity(
     row = result.scalar_one_or_none()
     if not row:
         return False
-    await db.delete(row)
+
+    max_v = await db.execute(
+        select(func.coalesce(func.max(EntityVersionRow.version), 0)).where(
+            EntityVersionRow.mission_id == mission_id,
+            EntityVersionRow.entity_id == entity_id,
+        )
+    )
+    next_version = max_v.scalar_one() + 1
+    now = datetime.now(timezone.utc).isoformat()
+    row.deleted_at = now
+    row.deleted_by = actor_id
+    db.add(
+        EntityVersionRow(
+            mission_id=mission_id,
+            entity_id=entity_id,
+            version=next_version,
+            created_at=now,
+            actor_id=actor_id,
+            value_json=json.dumps({"_deleted": True}),
+        )
+    )
     await db.flush()
     return True
 
@@ -139,7 +170,12 @@ async def get_world_snapshot(
 ) -> WorldSnapshot:
     types = await list_entity_types(db, mission_id)
 
-    entity_result = await db.execute(select(EntityRow).where(EntityRow.mission_id == mission_id))
+    entity_result = await db.execute(
+        select(EntityRow).where(
+            EntityRow.mission_id == mission_id,
+            EntityRow.deleted_at.is_(None),
+        )
+    )
     entity_rows = entity_result.scalars().all()
 
     entities: list[EntityDetail] = []

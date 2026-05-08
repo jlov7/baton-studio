@@ -1,15 +1,16 @@
 "use client";
 
-import { useCallback } from "react";
-import ReactFlow, {
+import { useCallback, useEffect } from "react";
+import {
   Background,
   Controls,
   MiniMap,
+  ReactFlow,
   useNodesState,
   useEdgesState,
   type Node,
-} from "reactflow";
-import "reactflow/dist/style.css";
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 
 import type { CausalGraphSnapshot, CausalNodeDetail } from "@/lib/api/types";
 import { nodeTypes } from "./NodeTypes";
@@ -22,8 +23,13 @@ interface CausalGraphCanvasProps {
 
 export function CausalGraphCanvas({ graph, onNodeClick }: CausalGraphCanvasProps) {
   const layout = useGraphLayout(graph);
-  const [nodes, , onNodesChange] = useNodesState(layout.nodes);
-  const [edges, , onEdgesChange] = useEdgesState(layout.edges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(layout.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(layout.edges);
+
+  useEffect(() => {
+    setNodes(layout.nodes);
+    setEdges(layout.edges);
+  }, [layout.edges, layout.nodes, setEdges, setNodes]);
 
   const handleNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
@@ -34,7 +40,7 @@ export function CausalGraphCanvas({ graph, onNodeClick }: CausalGraphCanvasProps
   );
 
   return (
-    <div className="w-full h-full">
+    <div className="h-full w-full">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -45,7 +51,7 @@ export function CausalGraphCanvas({ graph, onNodeClick }: CausalGraphCanvasProps
         fitView
         fitViewOptions={{ padding: 0.2 }}
         proOptions={{ hideAttribution: true }}
-        className="bg-zinc-900"
+        className="bg-[#0b0d10]"
       >
         <Background color="#27272a" gap={20} size={1} />
         <Controls

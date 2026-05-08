@@ -27,6 +27,39 @@ def _error(msg: str, details: Any = None) -> list[TextContent]:
     return [TextContent(type="text", text=json.dumps(payload, indent=2))]
 
 
+def _auth_headers() -> dict[str, str]:
+    token = os.environ.get("BATON_API_KEY")
+    return {"Authorization": f"Bearer {token}"} if token else {}
+
+
+async def _request_json(
+    method: str,
+    path: str,
+    *,
+    error_message: str,
+    **kwargs: Any,
+) -> tuple[Any | None, list[TextContent] | None]:
+    try:
+        response = await client.request(method, path, headers=_auth_headers(), **kwargs)
+    except httpx.ConnectError:
+        return None, _error(
+            "Cannot connect to Baton backend",
+            {"base_url": BASE_URL, "hint": "Start the backend server or set BATON_BACKEND_URL."},
+        )
+
+    try:
+        data: Any = response.json()
+    except json.JSONDecodeError:
+        data = {"raw": response.text}
+
+    if response.status_code >= 400:
+        return None, _error(
+            error_message,
+            {"status_code": response.status_code, "response": data},
+        )
+    return data, None
+
+
 @server.list_tools()
 async def list_tools() -> list[Tool]:
     return [
@@ -175,67 +208,85 @@ async def list_tools() -> list[Tool]:
 async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     try:
         if name == "baton.health":
-            r = await client.get("/health")
-            return _text(r.json())
+            data, error = await _request_json("GET", "/health", error_message="Health check failed")
+            return error or _text(data)
 
         elif name == "baton.read_world":
             mid = arguments["mission_id"]
-            r = await client.get(f"/missions/{mid}/world")
-            return _text(r.json())
+            data, error = await _request_json(
+                "GET",
+                f"/missions/{mid}/world",
+                error_message="World read failed",
+            )
+            return error or _text(data)
 
         elif name == "baton.list_types":
             mid = arguments["mission_id"]
-            r = await client.get(f"/missions/{mid}/types")
-            return _text(r.json())
+            data, error = await _request_json(
+                "GET",
+                f"/missions/{mid}/types",
+                error_message="Entity type list failed",
+            )
+            return error or _text(data)
 
         elif name == "baton.propose_patch":
             mid = arguments["mission_id"]
-            r = await client.post(
+            data, error = await _request_json(
+                "POST",
                 f"/missions/{mid}/patches/propose",
+                error_message="Patch proposal failed",
                 json={"actor_id": arguments["actor_id"], "patch": arguments["patch"]},
             )
-            data = r.json()
-            if r.status_code != 200:
-                return _error("Patch proposal failed", data)
-            return _text(data)
+            return error or _text(data)
 
         elif name == "baton.claim_baton":
             mid = arguments["mission_id"]
-            r = await client.post(
+            data, error = await _request_json(
+                "POST",
                 f"/missions/{mid}/baton/claim",
+                error_message="Baton claim failed",
                 json={
                     "actor_id": arguments["actor_id"],
                     "lease_ms": arguments.get("lease_ms", 20000),
                 },
             )
-            return _text(r.json())
+            return error or _text(data)
 
         elif name == "baton.release_baton":
             mid = arguments["mission_id"]
-            r = await client.post(
+            data, error = await _request_json(
+                "POST",
                 f"/missions/{mid}/baton/release",
+                error_message="Baton release failed",
                 json={"actor_id": arguments["actor_id"]},
             )
-            return _text(r.json())
+            return error or _text(data)
 
         elif name == "baton.commit_patch":
             mid = arguments["mission_id"]
-            r = await client.post(
+            data, error = await _request_json(
+                "POST",
                 f"/missions/{mid}/patches/commit",
+                error_message="Patch commit failed",
                 json={
                     "actor_id": arguments["actor_id"],
                     "proposal_id": arguments["proposal_id"],
                 },
             )
-            data = r.json()
-            if r.status_code == 403:
-                return _error("Baton not held", data)
+            if error:
+                payload = json.loads(error[0].text)
+                details = payload.get("details", {})
+                if details.get("status_code") == 403:
+                    return _error("Baton not held", details)
+                return error
             return _text(data)
 
         elif name == "baton.add_causal_edge":
             mid = arguments["mission_id"]
-            r = await client.post(
+            data, error = await _request_json(
+                "POST",
                 f"/missions/{mid}/causal/edge",
+                error_message="Causal edge creation failed",
                 json={
                     "actor_id": arguments["actor_id"],
                     "from_id": arguments["from_id"],
@@ -244,34 +295,35 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
                     "metadata": arguments.get("metadata", {}),
                 },
             )
-            return _text(r.json())
+            return error or _text(data)
 
         elif name == "baton.energy_balance":
             mid = arguments["mission_id"]
             aid = arguments["actor_id"]
-            r = await client.get(f"/missions/{mid}/energy/{aid}")
-            return _text(r.json())
+            data, error = await _request_json(
+                "GET",
+                f"/missions/{mid}/energy/{aid}",
+                error_message="Energy balance read failed",
+            )
+            return error or _text(data)
 
         elif name == "baton.energy_spend":
             mid = arguments["mission_id"]
-            r = await client.post(
+            data, error = await _request_json(
+                "POST",
                 f"/missions/{mid}/energy/spend",
+                error_message="Energy spend failed",
                 json={
                     "actor_id": arguments["actor_id"],
                     "amount": arguments["amount"],
                     "reason": arguments.get("reason", ""),
                 },
             )
-            data = r.json()
-            if r.status_code == 400:
-                return _error("Energy spend failed", data)
-            return _text(data)
+            return error or _text(data)
 
         else:
             return _error(f"Unknown tool: {name}")
 
-    except httpx.ConnectError:
-        return _error("Cannot connect to backend. Is the server running on port 8787?")
     except Exception as e:
         return _error(f"Tool error: {type(e).__name__}: {e}")
 

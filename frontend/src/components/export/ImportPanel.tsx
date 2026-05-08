@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { UploadSimple } from "@phosphor-icons/react";
 import { API_BASE } from "@/config/constants";
+import { authHeaders } from "@/lib/api/client";
 
 interface ImportPanelProps {
   onImported: (missionId: string) => void;
@@ -21,9 +23,13 @@ export function ImportPanel({ onImported }: ImportPanelProps) {
         form.append("file", file);
         const res = await fetch(`${API_BASE}/missions/import`, {
           method: "POST",
+          headers: authHeaders(),
           body: form,
         });
-        if (!res.ok) throw new Error("Import failed");
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          throw new Error(body?.detail ?? "Import failed");
+        }
         const data = await res.json();
         onImported(data.mission_id);
       } catch (err) {
@@ -36,7 +42,7 @@ export function ImportPanel({ onImported }: ImportPanelProps) {
   );
 
   return (
-    <div className="flex flex-col gap-4 p-5 rounded-2xl border border-white/[0.06] bg-zinc-900/60">
+    <div className="panel flex flex-col gap-4 p-5">
       <h3 className="text-sm font-medium text-zinc-300">Import Mission Pack</h3>
       <p className="text-xs text-zinc-500">
         Load a previously exported mission pack (.zip) to review in replay mode.
@@ -54,8 +60,9 @@ export function ImportPanel({ onImported }: ImportPanelProps) {
       <button
         onClick={() => inputRef.current?.click()}
         disabled={importing}
-        className="self-start px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium text-sm rounded-lg transition-colors disabled:opacity-50"
+        className="focus-ring inline-flex self-start items-center gap-2 rounded-md border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/[0.08] disabled:opacity-50"
       >
+        <UploadSimple size={15} weight="bold" />
         {importing ? "Importing..." : "Choose .zip File"}
       </button>
       {error && <p className="text-xs text-red-400">{error}</p>}

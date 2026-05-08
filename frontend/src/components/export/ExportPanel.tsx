@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { DownloadSimple } from "@phosphor-icons/react";
 import { API_BASE } from "@/config/constants";
+import { authHeaders } from "@/lib/api/client";
 
 interface ExportPanelProps {
   missionId: string;
@@ -16,6 +18,7 @@ export function ExportPanel({ missionId, missionTitle }: ExportPanelProps) {
     try {
       const res = await fetch(`${API_BASE}/missions/${missionId}/export`, {
         method: "POST",
+        headers: authHeaders(),
       });
       if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
@@ -31,7 +34,7 @@ export function ExportPanel({ missionId, missionTitle }: ExportPanelProps) {
   }, [missionId]);
 
   return (
-    <div className="flex flex-col gap-4 p-5 rounded-2xl border border-white/[0.06] bg-zinc-900/60">
+    <div className="panel flex flex-col gap-4 p-5">
       <h3 className="text-sm font-medium text-zinc-300">Export Mission Pack</h3>
       <p className="text-xs text-zinc-500">
         Download a complete snapshot of <strong>{missionTitle}</strong> including
@@ -40,8 +43,9 @@ export function ExportPanel({ missionId, missionTitle }: ExportPanelProps) {
       <button
         onClick={handleExport}
         disabled={exporting}
-        className="self-start px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-medium text-sm rounded-lg transition-colors disabled:opacity-50"
+        className="focus-ring inline-flex self-start items-center gap-2 rounded-md bg-cyan-300 px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:bg-cyan-200 disabled:opacity-50"
       >
+        <DownloadSimple size={15} weight="bold" />
         {exporting ? "Exporting..." : "Download .zip"}
       </button>
     </div>

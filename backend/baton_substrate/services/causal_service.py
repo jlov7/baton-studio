@@ -160,7 +160,7 @@ async def invalidate_downstream(
         await event_service.emit(
             db,
             mission_id,
-            "causal.invalidation",
+            "causal.invalidated",
             actor,
             {"source": start_node_id, "invalidated": invalidated},
         )

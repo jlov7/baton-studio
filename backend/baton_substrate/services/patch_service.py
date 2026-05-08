@@ -115,7 +115,9 @@ async def commit(
             )
             new_versions.append({"entity_id": op.id, "type": op.type, "version": version})
         elif op.op == "delete":
-            await world_service.delete_entity(db, mission_id, op.id)
+            deleted = await world_service.delete_entity(db, mission_id, op.id, actor_id)
+            if deleted:
+                new_versions.append({"entity_id": op.id, "type": op.type, "deleted": True})
 
     row.status = "committed"
     await db.flush()
@@ -134,3 +136,21 @@ async def commit(
         new_versions=new_versions,
         message="Patch committed successfully",
     )
+
+
+async def estimate_commit_energy_cost(
+    db: AsyncSession,
+    mission_id: str,
+    proposal_id: str,
+) -> int:
+    result = await db.execute(
+        select(PatchRow).where(
+            PatchRow.proposal_id == proposal_id,
+            PatchRow.mission_id == mission_id,
+        )
+    )
+    row = result.scalar_one_or_none()
+    if not row or row.status != "pending":
+        return 0
+    patch = Patch(**json.loads(row.patch_json))
+    return len(patch.ops) * 10

@@ -1,19 +1,23 @@
 # Baton Studio
 
-Control-room UI and shared substrate for multi-agent work: a typed world model, causal graph, energy budget, baton arbitration, and replayable event log running locally on FastAPI, SQLite, Next.js, and MCP.
+Local-first agent operations room: a shared substrate for multi-agent work with a typed world model, causal graph, energy budget, baton arbitration, replayable events, import/export, MCP, and a production-ready control-room UI.
 
 [![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Node](https://img.shields.io/badge/node-20%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 
-## What This Repo Ships
+## Why It Exists
 
-- A local-first backend in [backend](backend)
-- A Next.js control-room UI in [frontend](frontend)
-- An MCP server in [mcp_server](mcp_server)
-- A one-click demo mission with no API keys required
-- Import/export of mission packs as `.zip` archives
-- Playwright coverage that self-starts the app and refreshes screenshots under `assets/ui/`
+Most agent systems lose the plot because state is scattered across prompts, logs, scratch files, and tool calls. Baton Studio gives agents and humans one shared operational substrate:
+
+- **World model**: typed entities with immutable versions
+- **Causal graph**: evidence, decisions, plans, artifacts, and invalidation edges
+- **Baton arbitration**: one writer at a time for high-consequence commits
+- **Energy budget**: explicit spend/lease pressure instead of hidden agent churn
+- **Event replay**: append-only timeline for debugging and audit
+- **MCP surface**: agents can read, propose, claim, commit, and spend through tools
+
+The default mode is frictionless and local. Production mode adds scoped bearer tokens, CORS hardening, security headers, readiness checks, and metrics without requiring a cloud dependency.
 
 ## Screens
 
@@ -38,55 +42,131 @@ Prerequisites:
 - Node 20+
 - [pnpm](https://pnpm.io/)
 
-Run the full app:
-
 ```bash
-git clone <repo-url> baton-studio
+git clone https://github.com/jlov7/baton-studio.git
 cd baton-studio
 make dev
 ```
 
-Then open [http://localhost:3000](http://localhost:3000) and click `Load Demo Mission`.
+Open [http://localhost:3000](http://localhost:3000), click `Load Demo Mission`, then inspect Mission, World, Graph, Timeline, and Export.
+
+If port `3000` is occupied:
+
+```bash
+cd frontend
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8787 \
+NEXT_PUBLIC_WS_URL=ws://127.0.0.1:8787 \
+pnpm exec next dev -p 3100
+```
 
 ## Commands
 
 ```bash
-make dev    # backend + frontend in watch mode
-make check  # backend lint/format/typecheck/tests + frontend lint/typecheck + MCP smoke tests
-make e2e    # self-started Playwright run with isolated test DB; refreshes assets/ui/*.png
-make demo   # writes dist/demo_pack.zip and builds the frontend
+make dev      # backend + frontend in watch mode
+make check    # backend ruff/format/full mypy/tests + frontend audit/lint/typecheck + MCP tests
+make audit    # backend, frontend, and MCP dependency vulnerability audit
+make e2e      # self-started Playwright suite with isolated test DB; refreshes assets/ui/*.png
+make demo     # writes dist/demo_pack.zip and builds the frontend
 ```
 
-Notes:
+Current quality bar:
 
-- `make e2e` starts both services automatically; you do not need a second terminal.
-- `make e2e` uses an isolated SQLite database under `dist/` so it does not reuse your local working DB.
-- `make demo` produces `dist/demo_pack.zip`, an importable mission pack containing `mission_pack.json`.
+- backend tests: 83 passing
+- MCP tests: 8 passing
+- Playwright E2E: 21 passing
+- full backend mypy: passing
+- frontend typecheck/lint/build: passing
+- backend/frontend/MCP dependency audits: passing
+
+## Production Mode
+
+Local mode is unauthenticated. Production mode requires bearer auth.
+
+```bash
+export BATON_ENV=production
+export BATON_API_KEY="$(openssl rand -hex 32)"
+export BATON_CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+make dev
+```
+
+Scoped team tokens are supported:
+
+```bash
+export BATON_ENV=production
+export BATON_API_KEYS="read-token:reader,ops-token:operator,admin-token:admin"
+```
+
+Roles:
+
+- `reader`: read HTTP routes, WebSocket subscription, metrics
+- `operator`: reader plus mutating mission operations
+- `admin`: operator plus mission import and admin-compatible access
+
+`BATON_API_KEY` remains a compatibility shortcut and is treated as `admin`.
+
+Frontend production auth is intentionally explicit. Only expose `NEXT_PUBLIC_BATON_API_KEY` in trusted internal deployments:
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8787 \
+NEXT_PUBLIC_WS_URL=ws://localhost:8787 \
+NEXT_PUBLIC_BATON_API_KEY="$BATON_API_KEY" \
+pnpm --dir frontend build
+```
+
+## Docker
+
+Create a `.env` from [.env.example](.env.example), set a real token, then run:
+
+```bash
+docker compose up --build
+```
+
+Services:
+
+- frontend: [http://localhost:3000](http://localhost:3000)
+- backend: [http://localhost:8787](http://localhost:8787)
+- readiness: [http://localhost:8787/ready](http://localhost:8787/ready)
+
+The default compose file uses a named Docker volume for SQLite at `/data/baton.sqlite`. For Postgres, set `BATON_DATABASE_URL` to an async SQLAlchemy URL and run migrations before serving.
+
+## Operations
+
+Backend health surfaces:
+
+- `GET /health`: mode and high-level readiness
+- `GET /ready`: database/auth readiness, returns `503` when not ready
+- `GET /metrics`: Prometheus-style runtime counters and request duration totals
+
+Production responses include:
+
+- `x-request-id`
+- `x-content-type-options: nosniff`
+- `referrer-policy: no-referrer`
+- `x-frame-options: DENY`
+- HSTS in production
+
+Mission packs are zip files containing exactly one `mission_pack.json` with `schema_version: 1`. Import validates zip shape, uncompressed size, nested payload shape, duplicate mission IDs, and schema version before writing.
 
 ## Architecture
 
-### System layout
-
 ![Architecture](assets/diagrams/architecture.svg)
 
-### Write protocol
+### Write Protocol
 
 ![Write Protocol](assets/diagrams/write-protocol.svg)
 
-### Baton arbitration
+### Baton Arbitration
 
 ![Baton Arbitration](assets/diagrams/baton-arbitration.svg)
 
-### Causal graph model
-
-![Causal Graph Model](assets/diagrams/causal-graph.svg)
-
-### Data model
+### Data Model
 
 ![Data Model](assets/diagrams/data-model.svg)
 
-More detail lives in:
+Detailed specs:
 
+- [PRODUCT.md](PRODUCT.md)
+- [DESIGN.md](DESIGN.md)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - [docs/API_SPEC.md](docs/API_SPEC.md)
 - [docs/DATA_MODEL.md](docs/DATA_MODEL.md)
@@ -94,26 +174,9 @@ More detail lives in:
 - [docs/UX_SPEC.md](docs/UX_SPEC.md)
 - [docs/ACCEPTANCE_CHECKLIST.md](docs/ACCEPTANCE_CHECKLIST.md)
 
-## Demo Flow
-
-The built-in demo is a one-click scripted mission. Loading it creates a mission, populates the world model, builds the causal graph, emits timeline events, and updates the baton/energy HUD without a separate “start simulation” step.
-
-After loading the demo you can:
-
-- Inspect entities and version history in `World`
-- Inspect nodes and edges in `Graph`
-- Replay the event stream in `Timeline`
-- Export the mission as a `.zip` from `Export`
-
 ## MCP Integration
 
-Start the backend first:
-
-```bash
-make dev
-```
-
-Then add the MCP server from another project:
+Start the backend first, then register the MCP server from another project:
 
 ```bash
 claude mcp add baton-studio -- \
@@ -121,46 +184,41 @@ claude mcp add baton-studio -- \
   baton-mcp-server
 ```
 
-If the backend is not on the default port:
+Production/authenticated backend:
 
 ```bash
 BATON_BACKEND_URL=http://localhost:8787 \
+BATON_API_KEY="$BATON_API_KEY" \
 claude mcp add baton-studio -- \
   uv run --project /absolute/path/to/baton-studio/mcp_server \
   baton-mcp-server
 ```
 
-Available tools are defined in [docs/MCP_SPEC.md](docs/MCP_SPEC.md). The current server exposes the `baton.*` health, world, patch, baton, causal, and energy operations implemented in [mcp_server/main.py](mcp_server/main.py).
+MCP tools are documented in [docs/MCP_SPEC.md](docs/MCP_SPEC.md) and implemented in [mcp_server/main.py](mcp_server/main.py).
 
 ## Repo Layout
 
 ```text
-backend/        FastAPI substrate server, demo simulator, services, pytest suite
-frontend/       Next.js app, typed API client, Playwright suite
+backend/        FastAPI substrate server, migrations, simulator, services, pytest suite
+frontend/       Next.js control-room app, typed API client, Playwright suite
 mcp_server/     Stdio MCP bridge that proxies to the backend HTTP API
-assets/         Brand assets, rendered diagrams, generated UI screenshots
+assets/         Brand assets, diagrams, generated UI screenshots
 docs/           Product, architecture, API, UX, MCP, troubleshooting, acceptance docs
 scripts/        Repo utilities such as diagram rendering
 ```
 
 ## Regenerating Artifacts
 
-Refresh diagrams:
-
 ```bash
 ./scripts/render_diagrams.sh
-```
-
-Refresh screenshots:
-
-```bash
 make e2e
 ```
 
 ## Development Notes
 
-- Backend tests are in [backend/tests](backend/tests).
-- Frontend E2E tests are in [frontend/tests](frontend/tests).
-- MCP smoke tests are in [mcp_server/tests](mcp_server/tests).
+- Backend tests live in [backend/tests](backend/tests).
+- Frontend E2E tests live in [frontend/tests](frontend/tests).
+- MCP tests live in [mcp_server/tests](mcp_server/tests).
+- Active engineering notes live in [.codex](.codex).
 
 For contribution workflow and common issues, see [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).

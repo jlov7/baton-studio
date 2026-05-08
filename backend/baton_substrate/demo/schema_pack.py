@@ -1,6 +1,15 @@
 from __future__ import annotations
 
-ENTITY_TYPES: list[dict[str, object]] = [
+from typing import Any, TypedDict
+
+
+class EntityTypeSeed(TypedDict):
+    type_name: str
+    json_schema: dict[str, Any]
+    invariants: list[dict[str, Any]]
+
+
+ENTITY_TYPES: list[EntityTypeSeed] = [
     {
         "type_name": "PlanStep",
         "json_schema": {

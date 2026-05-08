@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { ReactFlowProvider } from "reactflow";
+import { useCallback, useMemo, useState } from "react";
+import { ReactFlowProvider } from "@xyflow/react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useMissionContext } from "@/lib/state/MissionContext";
 import { useInspector } from "@/components/layout/InspectorDrawer";
@@ -15,6 +15,36 @@ export default function GraphPage() {
   const { mission, graph } = useMissionContext();
   const { openInspector } = useInspector();
   const [lens, setLens] = useState("all");
+  const [query, setQuery] = useState("");
+
+  const filteredGraph = useMemo(() => {
+    if (!graph) return null;
+    const normalizedQuery = query.trim().toLowerCase();
+    const nodes = graph.nodes.filter((node) => {
+      if (lens === "stale" && node.status !== "stale") return false;
+      if (lens === "disputed") {
+        const disputed = graph.edges.some(
+          (edge) =>
+            edge.edge_type === "contradicts" &&
+            (edge.from_id === node.node_id || edge.to_id === node.node_id),
+        );
+        if (!disputed) return false;
+      }
+      if (!normalizedQuery) return true;
+      return [node.node_id, node.node_type, node.label]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedQuery);
+    });
+    const nodeIds = new Set(nodes.map((node) => node.node_id));
+    return {
+      ...graph,
+      nodes,
+      edges: graph.edges.filter(
+        (edge) => nodeIds.has(edge.from_id) && nodeIds.has(edge.to_id),
+      ),
+    };
+  }, [graph, lens, query]);
 
   const handleNodeClick = useCallback(
     (node: CausalNodeDetail) => {
@@ -71,13 +101,17 @@ export default function GraphPage() {
       <GraphToolbar
         activeLens={lens}
         onLensChange={setLens}
-        onSearch={() => {}}
-        nodeCount={graph.nodes.length}
-        edgeCount={graph.edges.length}
+        onSearch={setQuery}
+        nodeCount={filteredGraph?.nodes.length ?? 0}
+        edgeCount={filteredGraph?.edges.length ?? 0}
       />
       <div className="flex-1">
         <ReactFlowProvider>
-          <CausalGraphCanvas graph={graph} onNodeClick={handleNodeClick} />
+          {filteredGraph && filteredGraph.nodes.length > 0 ? (
+            <CausalGraphCanvas graph={filteredGraph} onNodeClick={handleNodeClick} />
+          ) : (
+            <EmptyState title="No Graph Matches" description="Adjust the active lens or search." />
+          )}
         </ReactFlowProvider>
       </div>
     </div>

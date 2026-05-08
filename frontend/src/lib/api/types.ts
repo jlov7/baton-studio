@@ -218,4 +218,8 @@ export interface HealthResponse {
   ok: boolean;
   service: string;
   version: string;
+  mode: string;
+  auth_required: boolean;
+  ready: boolean;
+  auth_modes: string[];
 }

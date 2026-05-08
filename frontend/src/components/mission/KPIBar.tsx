@@ -14,7 +14,7 @@ export function KPIBar({ scMetric, violationCount, invalidationCount }: KPIBarPr
   const scColor = sc >= 0.7 ? "text-emerald-400" : sc >= 0.4 ? "text-amber-400" : "text-red-400";
 
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid gap-3 sm:grid-cols-3">
       <KPICard
         label="Structural Continuity"
         value={sc.toFixed(3)}
@@ -44,7 +44,7 @@ function KPICard({
   valueClass: string;
 }) {
   return (
-    <div className="flex flex-col gap-1 p-3 rounded-xl border border-white/[0.06] bg-zinc-900/60">
+    <div className="panel flex flex-col gap-1 p-3">
       <span className="text-[11px] text-zinc-500 uppercase tracking-wider">
         {label}
       </span>

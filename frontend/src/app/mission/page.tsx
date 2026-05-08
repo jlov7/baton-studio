@@ -1,24 +1,20 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowRight, Database, GitBranch, Play } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useMissionContext } from "@/lib/state/MissionContext";
 import { startDemo } from "@/lib/api/demo";
 import { HeroPanel } from "@/components/mission/HeroPanel";
 import { SquadStrip } from "@/components/mission/SquadStrip";
 import { KPIBar } from "@/components/mission/KPIBar";
-import { API_BASE } from "@/config/constants";
+import { EventCard } from "@/components/timeline/EventCard";
 
 export default function MissionPage() {
-  const {
-    mission,
-    baton,
-    agents,
-    scMetric,
-    events,
-    setMissionId,
-    loading,
-  } = useMissionContext();
+  const { mission, baton, agents, scMetric, events, world, graph, setMissionId, loading } =
+    useMissionContext();
+  const router = useRouter();
   const [demoLoading, setDemoLoading] = useState(false);
 
   const handleLoadDemo = useCallback(async () => {
@@ -33,8 +29,8 @@ export default function MissionPage() {
 
   const handleExport = useCallback(() => {
     if (!mission) return;
-    window.open(`${API_BASE}/missions/${mission.mission_id}/export`, "_blank");
-  }, [mission]);
+    router.push(`/export?mission=${encodeURIComponent(mission.mission_id)}`);
+  }, [mission, router]);
 
   const violationCount = useMemo(
     () => events.filter((e) => e.type === "invariant.violation").length,
@@ -50,13 +46,14 @@ export default function MissionPage() {
     return (
       <EmptyState
         title="No Mission Loaded"
-        description="Load a demo mission to explore Baton Studio's multi-agent coordination features."
+        description="Load the local demo mission or import a mission pack to inspect world state, baton arbitration, causality, energy, and replay."
         action={
           <button
             onClick={handleLoadDemo}
             disabled={demoLoading || loading}
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-medium text-sm rounded-lg transition-colors disabled:opacity-50"
+            className="focus-ring inline-flex items-center gap-2 rounded-md bg-cyan-300 px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:bg-cyan-200 disabled:opacity-50"
           >
+            <Play size={15} weight="fill" />
             {demoLoading ? "Loading Demo..." : "Load Demo Mission"}
           </button>
         }
@@ -65,7 +62,7 @@ export default function MissionPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-5xl">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 p-4 md:p-6">
       <HeroPanel
         mission={mission}
         batonHolder={baton?.holder ?? null}
@@ -74,27 +71,89 @@ export default function MissionPage() {
         onExport={handleExport}
       />
 
-      <section>
-        <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider mb-3">
-          Squad
-        </h2>
-        <SquadStrip
-          agents={agents}
-          batonHolder={baton?.holder ?? null}
-          missionBudget={mission.energy_budget}
-        />
-      </section>
+      <KPIBar
+        scMetric={scMetric}
+        violationCount={violationCount}
+        invalidationCount={invalidationCount}
+      />
 
-      <section>
-        <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider mb-3">
-          Key Metrics
-        </h2>
-        <KPIBar
-          scMetric={scMetric}
-          violationCount={violationCount}
-          invalidationCount={invalidationCount}
+      <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
+        <section className="min-w-0">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-xs font-semibold uppercase text-zinc-500">Squad</h2>
+            <span className="font-mono text-[11px] text-zinc-600">{agents.length} actors</span>
+          </div>
+          <SquadStrip
+            agents={agents}
+            batonHolder={baton?.holder ?? null}
+            missionBudget={mission.energy_budget}
+          />
+        </section>
+
+        <section className="panel min-w-0 p-3">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-xs font-semibold uppercase text-zinc-500">Recent Events</h2>
+            <button
+              onClick={() => router.push(`/timeline?mission=${encodeURIComponent(mission.mission_id)}`)}
+              className="focus-ring inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] text-zinc-400 hover:bg-white/[0.06] hover:text-zinc-200"
+            >
+              Timeline <ArrowRight size={12} weight="bold" />
+            </button>
+          </div>
+          <div className="max-h-[320px] overflow-y-auto">
+            {events.slice(-8).map((event) => (
+              <EventCard key={event.event_id} event={event} />
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <section className="grid gap-3 md:grid-cols-2">
+        <RouteTile
+          icon={<Database size={18} weight="duotone" />}
+          title="World Model"
+          value={`${world?.entities.length ?? 0} entities`}
+          detail={`${world?.entity_types.length ?? 0} schemas, ${world?.pending_proposals ?? 0} pending proposals`}
+          onClick={() => router.push(`/world?mission=${encodeURIComponent(mission.mission_id)}`)}
+        />
+        <RouteTile
+          icon={<GitBranch size={18} weight="duotone" />}
+          title="Causal Graph"
+          value={`${graph?.nodes.length ?? 0} nodes`}
+          detail={`${graph?.edges.length ?? 0} edges, ${invalidationCount} invalidation events`}
+          onClick={() => router.push(`/graph?mission=${encodeURIComponent(mission.mission_id)}`)}
         />
       </section>
     </div>
+  );
+}
+
+function RouteTile({
+  icon,
+  title,
+  value,
+  detail,
+  onClick,
+}: {
+  icon: ReactNode;
+  title: string;
+  value: string;
+  detail: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="panel focus-ring flex items-center gap-3 p-4 text-left transition-colors hover:bg-white/[0.06]"
+    >
+      <div className="flex h-9 w-9 items-center justify-center rounded-md border border-cyan-400/20 bg-cyan-400/[0.08] text-cyan-300">
+        {icon}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-semibold text-zinc-200">{title}</div>
+        <div className="mt-0.5 truncate text-xs text-zinc-500">{detail}</div>
+      </div>
+      <div className="font-mono text-sm text-zinc-300">{value}</div>
+    </button>
   );
 }

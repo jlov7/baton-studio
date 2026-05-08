@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useMissionContext } from "@/lib/state/MissionContext";
 import { useInspector } from "@/components/layout/InspectorDrawer";
@@ -15,11 +15,18 @@ export default function TimelinePage() {
   const { mission, events } = useMissionContext();
   const { openInspector } = useInspector();
   const [filter, setFilter] = useState("all");
+  const [replayIndex, setReplayIndex] = useState(0);
 
   const filteredEvents = useMemo(() => {
     if (filter === "all") return events;
     return events.filter((e) => e.type.startsWith(filter));
   }, [events, filter]);
+
+  useEffect(() => {
+    setReplayIndex(filteredEvents.length);
+  }, [filteredEvents.length]);
+
+  const visibleEvents = filteredEvents.slice(0, replayIndex);
 
   const handleEventClick = useCallback(
     (event: EventEnvelope) => {
@@ -77,9 +84,27 @@ export default function TimelinePage() {
       <FilterBar
         activeFilter={filter}
         onFilterChange={setFilter}
-        eventCount={filteredEvents.length}
+        eventCount={visibleEvents.length}
       />
-      <EventStream events={filteredEvents} onEventClick={handleEventClick} />
+      <div className="flex items-center gap-3 border-b border-white/[0.08] bg-[#0b0d10]/70 px-4 py-2">
+        <span className="text-[11px] font-semibold uppercase text-zinc-500">Replay</span>
+        <input
+          aria-label="Replay position"
+          type="range"
+          min={0}
+          max={filteredEvents.length}
+          value={replayIndex}
+          onChange={(event) => setReplayIndex(Number(event.target.value))}
+          className="h-1 flex-1 accent-cyan-300"
+        />
+        <span
+          className="w-20 text-right font-mono text-[11px] text-zinc-500"
+          data-testid="timeline-replay-counter"
+        >
+          {replayIndex}/{filteredEvents.length}
+        </span>
+      </div>
+      <EventStream events={visibleEvents} onEventClick={handleEventClick} />
     </div>
   );
 }

@@ -10,6 +10,14 @@ uv run --project mcp_server baton-mcp-server
 
 By default it talks to `http://localhost:8787`. Override that with `BATON_BACKEND_URL`.
 
+For production-mode backends, provide an `operator` or `admin` token:
+
+```bash
+BATON_BACKEND_URL=http://localhost:8787 \
+BATON_API_KEY="$BATON_API_KEY" \
+uv run --project mcp_server baton-mcp-server
+```
+
 ## Local Checks
 
 ```bash

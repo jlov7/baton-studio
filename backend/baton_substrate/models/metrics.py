@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class SCPoint(BaseModel):
@@ -10,4 +10,4 @@ class SCPoint(BaseModel):
 
 class SCMetricResponse(BaseModel):
     sc_current: float
-    sc_history: list[SCPoint] = []
+    sc_history: list[SCPoint] = Field(default_factory=list)

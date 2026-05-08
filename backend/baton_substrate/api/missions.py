@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 
-from baton_substrate.db import get_db
+import baton_substrate.db.engine as db_engine
 from baton_substrate.models.mission import (
     CreateMissionRequest,
     MissionResponse,
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/missions", tags=["missions"])
 
 @router.post("", response_model=MissionResponse)
 async def create_mission(req: CreateMissionRequest) -> MissionResponse:
-    async with get_db() as db:
+    async with db_engine.get_db() as db:
         return await mission_service.create_mission(
             db,
             req.title,
@@ -26,7 +26,7 @@ async def create_mission(req: CreateMissionRequest) -> MissionResponse:
 
 @router.get("/{mission_id}", response_model=MissionResponse)
 async def get_mission(mission_id: str) -> MissionResponse:
-    async with get_db() as db:
+    async with db_engine.get_db() as db:
         m = await mission_service.get_mission(db, mission_id)
         if not m:
             raise HTTPException(status_code=404, detail="Mission not found")
@@ -35,7 +35,7 @@ async def get_mission(mission_id: str) -> MissionResponse:
 
 @router.post("/{mission_id}/status", response_model=MissionResponse)
 async def update_status(mission_id: str, req: MissionStatusUpdate) -> MissionResponse:
-    async with get_db() as db:
+    async with db_engine.get_db() as db:
         try:
             return await mission_service.update_status(db, mission_id, req.status)
         except ValueError as e:

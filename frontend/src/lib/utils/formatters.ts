@@ -23,5 +23,5 @@ export function agentName(actorId: string): string {
 }
 
 export function eventLabel(type: string): string {
-  return type.replace(/\./g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return type.replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }

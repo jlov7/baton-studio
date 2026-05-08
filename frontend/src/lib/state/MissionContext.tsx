@@ -26,6 +26,8 @@ import { getGraph } from "@/lib/api/causal";
 import { getSCMetric } from "@/lib/api/metrics";
 import { getEvents } from "@/lib/api/events";
 import { useWebSocket } from "@/lib/ws/useWebSocket";
+import { MISSION_STORAGE_KEY } from "@/config/constants";
+import { ApiError } from "@/lib/api/client";
 
 interface MissionState {
   missionId: string | null;
@@ -46,7 +48,7 @@ interface MissionState {
 const MissionContext = createContext<MissionState | null>(null);
 
 export function MissionProvider({ children }: { children: ReactNode }) {
-  const [missionId, setMissionId] = useState<string | null>(null);
+  const [missionId, setMissionIdState] = useState<string | null>(null);
   const [mission, setMission] = useState<MissionResponse | null>(null);
   const [world, setWorld] = useState<WorldSnapshot | null>(null);
   const [baton, setBaton] = useState<BatonStateResponse | null>(null);
@@ -56,6 +58,21 @@ export function MissionProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<EventEnvelope[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const setMissionId = useCallback((id: string | null) => {
+    setMissionIdState(id);
+    if (typeof window === "undefined") return;
+
+    const url = new URL(window.location.href);
+    if (id) {
+      window.localStorage.setItem(MISSION_STORAGE_KEY, id);
+      url.searchParams.set("mission", id);
+    } else {
+      window.localStorage.removeItem(MISSION_STORAGE_KEY);
+      url.searchParams.delete("mission");
+    }
+    window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+  }, []);
 
   const refresh = useCallback(async () => {
     if (!missionId) return;
@@ -79,11 +96,26 @@ export function MissionProvider({ children }: { children: ReactNode }) {
       setScMetric(sc);
       setEvents(ev.events);
     } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        setMissionId(null);
+        setError(`Mission ${missionId} was not found. The saved mission was cleared.`);
+        return;
+      }
       setError(err instanceof Error ? err.message : "Failed to load mission");
     } finally {
       setLoading(false);
     }
-  }, [missionId]);
+  }, [missionId, setMissionId]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const queryMission = params.get("mission");
+    const storedMission = window.localStorage.getItem(MISSION_STORAGE_KEY);
+    const nextMission = queryMission || storedMission;
+    if (nextMission) {
+      setMissionId(nextMission);
+    }
+  }, [setMissionId]);
 
   useEffect(() => {
     if (missionId) {
@@ -154,6 +186,7 @@ export function MissionProvider({ children }: { children: ReactNode }) {
       wsStatus,
       loading,
       error,
+      setMissionId,
       refresh,
     ],
   );

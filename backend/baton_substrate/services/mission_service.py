@@ -24,6 +24,8 @@ async def create_mission(
     goal: str = "",
     energy_budget: int = 1000,
 ) -> MissionResponse:
+    if energy_budget <= 0:
+        raise ValueError("Energy budget must be positive")
     mid = f"mis_{uuid.uuid4().hex[:12]}"
     now = _now()
     row = MissionRow(
@@ -70,11 +72,23 @@ async def get_mission(db: AsyncSession, mission_id: str) -> MissionResponse | No
     )
 
 
-async def update_status(db: AsyncSession, mission_id: str, status: str) -> MissionResponse:
+async def mission_exists(db: AsyncSession, mission_id: str) -> bool:
+    result = await db.execute(
+        select(MissionRow.mission_id).where(MissionRow.mission_id == mission_id)
+    )
+    return result.scalar_one_or_none() is not None
+
+
+async def require_mission(db: AsyncSession, mission_id: str) -> MissionRow:
     result = await db.execute(select(MissionRow).where(MissionRow.mission_id == mission_id))
     row = result.scalar_one_or_none()
     if not row:
         raise ValueError(f"Mission {mission_id} not found")
+    return row
+
+
+async def update_status(db: AsyncSession, mission_id: str, status: str) -> MissionResponse:
+    row = await require_mission(db, mission_id)
     row.status = status
     await db.flush()
     await event_service.emit(

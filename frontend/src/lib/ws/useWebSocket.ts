@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { WS_URL } from "@/config/constants";
+import { BATON_API_KEY, WS_URL } from "@/config/constants";
 import type { EventEnvelope } from "@/lib/api/types";
 
 type WSStatus = "connecting" | "connected" | "disconnected";
@@ -22,7 +22,8 @@ export function useWebSocket(
     if (!missionId) return;
     setStatus("connecting");
 
-    const ws = new WebSocket(`${WS_URL}/ws/${missionId}`);
+    const token = BATON_API_KEY ? `?token=${encodeURIComponent(BATON_API_KEY)}` : "";
+    const ws = new WebSocket(`${WS_URL}/ws/${missionId}${token}`);
     wsRef.current = ws;
 
     ws.onopen = () => {

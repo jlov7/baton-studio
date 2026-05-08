@@ -20,6 +20,7 @@ const EVENT_COLORS: Record<string, { dot: string; bg: string }> = {
   "causal.edge_added": { dot: "bg-purple-400", bg: "" },
   "causal.invalidated": { dot: "bg-red-400", bg: "bg-red-500/5" },
   "energy.spent": { dot: "bg-cyan-400", bg: "" },
+  "energy.rebalanced": { dot: "bg-cyan-300", bg: "bg-cyan-500/5" },
   "agent.joined": { dot: "bg-emerald-400", bg: "" },
   "mission.created": { dot: "bg-zinc-400", bg: "" },
 };
@@ -31,7 +32,7 @@ export function EventCard({ event, onClick }: EventCardProps) {
     <button
       onClick={onClick}
       className={cn(
-        "flex items-start gap-3 w-full text-left px-4 py-2.5 rounded-lg transition-colors hover:bg-white/[0.04]",
+        "focus-ring flex w-full items-start gap-3 rounded-md px-4 py-2.5 text-left transition-colors hover:bg-white/[0.04]",
         colors.bg,
       )}
     >

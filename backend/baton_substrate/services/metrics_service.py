@@ -41,7 +41,7 @@ async def compute_sc(db: AsyncSession, mission_id: str) -> SCMetricResponse:
         select(EventRow)
         .where(
             EventRow.mission_id == mission_id,
-            EventRow.type.in_(["patch.committed", "patch.rejected", "causal.invalidation"]),
+            EventRow.type.in_(["patch.committed", "patch.rejected", "causal.invalidated"]),
         )
         .order_by(EventRow.ts)
     )
@@ -54,7 +54,7 @@ async def compute_sc(db: AsyncSession, mission_id: str) -> SCMetricResponse:
     for evt in events:
         if evt.type == "patch.rejected":
             running_v += 1
-        elif evt.type == "causal.invalidation":
+        elif evt.type == "causal.invalidated":
             running_i += 1
         elif evt.type == "patch.committed":
             running_r += 1

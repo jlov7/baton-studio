@@ -1,106 +1,100 @@
-# Architecture — Baton Studio
+# Architecture - Baton Studio
 
-## 1) High-level
+## 1. High-Level
 
 Baton Studio is a local-first system with three runtime components:
 
 1. **Substrate Server** (FastAPI)
-   - persists state (SQLite)
-   - enforces invariants
-   - stores causal graph
-   - tracks energy budgets
-   - emits an append-only event stream
+   - persists state with SQLite by default and Postgres-compatible `BATON_DATABASE_URL`
+   - enforces invariants, baton ownership, mission existence, and energy spending
+   - stores causal graph, world state, and append-only events
+   - enforces production-mode scoped API key auth and configured CORS origins
+   - exposes readiness and Prometheus-style runtime metrics
 
-2. **MCP Server** (stdio or HTTP)
+2. **MCP Server** (stdio)
    - exposes substrate operations as MCP tools
-   - proxies to Substrate Server HTTP API
+   - proxies to the Substrate Server HTTP API
+   - forwards production API keys and normalizes backend errors
 
 3. **Control Room UI** (Next.js)
    - reads state snapshots over HTTP
-   - subscribes to real-time events over WebSocket
-   - renders World Model + Causal Graph + Timeline + HUD
+   - stores selected mission in `?mission=<mission_id>` with localStorage fallback
+   - subscribes to real-time events over `WS /ws/{mission_id}`
+   - renders Mission Control, World Model, Causal Graph, Timeline, and Export/Import
 
----
+## 2. Data Model Primitives
 
-## 2) Data model primitives
+### World Model
 
-### 2.1 World Model
-- `EntityType` — schema + invariants
-- `Entity` — typed object instance
-- `EntityVersion` — immutable versioned snapshot created on each commit
+- `EntityType`: schema plus invariants
+- `Entity`: typed object instance with optional delete provenance
+- `EntityVersion`: immutable versioned snapshot created on commit
 
-### 2.2 Causal Graph
-- `CausalNode` — evidence/decision/plan/object-version/violation
-- `CausalEdge` — typed edge (supports/depends/etc)
+### Causal Graph
 
-### 2.3 Energy Pool
-- `EnergyAccount` — per agent + per mission
-- `EnergyEvent` — spends and allocations
+- `CausalNode`: evidence, decision, plan, object-version, violation, or derived node
+- `CausalEdge`: typed edge such as supports or depends
 
-### 2.4 Baton
-- `BatonState` — holder + queue + lease expiry
+### Energy Pool
 
-### 2.5 Event log
-Append-only event store:
-- `Event` { id, ts, type, actor, payload }
+- `EnergyAccount`: per agent and per mission
+- energy events: allocations, rebalances, spends
 
----
+### Baton
 
-## 3) Write flows
+- `BatonState`: holder, FIFO queue, lease expiry
 
-### Flow A: Proposal (no baton)
+### Event Log
+
+Append-only `Event` rows: id, timestamp, type, actor, payload.
+
+## 3. Write Flows
+
+### Proposal
+
 - agent calls `propose_patch`
-- server validates schema; soft invariants may be violated
-- proposal stored as `PendingPatch`
+- server validates schema and invariants
+- proposal is stored as `PatchRow`
 - event emitted: `patch.proposed`
 
-### Flow B: Commit (baton required)
+### Commit
+
 - agent calls `commit_patch`
-- server verifies baton holder
-- server verifies hard invariants
-- creates new EntityVersion(s)
-- writes causal edges if provided
-- updates energy accounts
+- server verifies mission, baton holder, hard invariants, and energy
+- server creates new `EntityVersion` rows
+- server writes causal edges and invalidates downstream nodes when needed
 - event emitted: `patch.committed`
 
----
+## 4. Baton Arbitration
 
-## 4) Baton arbitration (MVP)
-- baton is a lease:
-  - claim → get lease until `now + lease_ms`
-  - refresh lease allowed
-  - release baton early allowed
-  - timeout auto-releases
-- queue is FIFO by default
-- optional: queue priority weighted by energy balance
+- baton is a lease: claim, release, queue, timeout
+- queue is FIFO
+- claim/release/commit use row-level locking semantics where supported and preserve SQLite local mode
 
----
+## 5. Structural Continuity Metric
 
-## 5) Structural continuity metric (SCk)
-For MVP, define SCk as:
+For MVP:
 
-- Let `V(t)` be count of invalidated nodes at time t
-- Let `I(t)` be count of invariant violations at time t (hard weighted > soft)
-- Let `R(t)` be count of rollbacks/rejections at time t
+- Let `V(t)` be invalidated nodes at time t
+- Let `I(t)` be invariant violations at time t
+- Let `R(t)` be rollbacks or rejections at time t
 
-Then:
-- `SC(t) = exp(-α·V(t) - β·I(t) - γ·R(t))`
-- `SCk` is the rolling average over last k events.
+`SC(t) = exp(-alpha * V(t) - beta * I(t) - gamma * R(t))`
 
-Expose:
-- SC timeline
-- SC current value in HUD
+The backend exposes current and rolling structural continuity through `GET /missions/{id}/metrics/sc`.
 
----
-
-## 6) API surfaces
+## 6. Public Surfaces
 
 ### HTTP
+
 - `GET /health`
+- `GET /ready`
+- `GET /metrics`
 - `POST /missions`
 - `GET /missions/{id}`
 - `POST /missions/{id}/status`
 - `GET /missions/{id}/world`
+- `GET /missions/{id}/types`
 - `POST /missions/{id}/patches/propose`
 - `POST /missions/{id}/patches/commit`
 - `POST /missions/{id}/baton/claim`
@@ -114,44 +108,41 @@ Expose:
 - `GET /missions/{id}/agents`
 - `POST /missions/{id}/agents`
 - `GET /missions/{id}/metrics/sc`
-- `POST /missions/{id}/demo/start`
+- `POST /demo/start`
 - `POST /missions/{id}/export`
-- `POST /missions/{id}/import`
+- `POST /missions/import`
 
 ### WebSocket
-- `WS /ws?mission_id=...`
-- emits events from the append-only log
 
-### MCP tools
-See `docs/MCP_SPEC.md`
+- `WS /ws/{mission_id}`
+- emits append-only event envelopes
+- production mode accepts bearer auth or `?token=<token>`
 
----
+### MCP
 
-## 7) Storage
-SQLite tables:
-- missions (includes `status` column: idle/running/paused/exported)
-- entity_types
-- entities
-- entity_versions
-- causal_nodes
-- causal_edges
-- energy_accounts
-- baton_state
-- patches (pending)
-- events (append-only)
-- agents (mission_id, actor_id, display_name, role, joined_at, status)
+See `docs/MCP_SPEC.md`.
 
----
+## 7. Storage And Runtime Controls
 
-## 8) Demo simulation mode
-- backend includes a simulator that:
-  - spawns N async “agents”
-  - they call the same patch/baton APIs
-  - deterministic random seed ensures consistent demo
+Schema details, indexes, foreign keys, and mission pack semantics are in `docs/DATA_MODEL.md`.
 
----
+Runtime controls:
+- `BATON_ENV=local|production`
+- `BATON_DATABASE_URL=sqlite+aiosqlite:///...` or async Postgres URL
+- `BATON_API_KEY=<admin-token>` for production compatibility mode
+- `BATON_API_KEYS=read-token:reader,ops-token:operator,admin-token:admin` for scoped team mode
+- `BATON_CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000`
+- `BATON_MAX_MISSION_PACK_BYTES=5000000`
+- `BATON_EVENT_PAGE_LIMIT_MAX=500`
 
-## 9) Deployment (MVP)
-- single machine
-- run via `make dev`
-- optional Docker compose for portability
+## 8. Demo Simulation Mode
+
+The backend includes a deterministic simulator behind `POST /demo/start`. It creates a mission, agents, world state, causal edges, timeline events, and a balanced mission energy pool.
+
+## 9. Verification
+
+Before shipping changes:
+- `make check`
+- `make audit`
+- `make e2e`
+- frontend production build through `make demo` or `cd frontend && pnpm build`

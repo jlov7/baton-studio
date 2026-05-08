@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CaretRight } from "@phosphor-icons/react";
 import type { EntityDetail, EntityTypeSchema } from "@/lib/api/types";
 import { cn } from "@/lib/utils/cn";
 import { Badge } from "@/components/shared/Badge";
@@ -37,24 +38,16 @@ export function EntityTypeList({
                 expandedType === type.type_name ? null : type.type_name,
               )
             }
-            className="flex items-center gap-2 w-full px-3 py-2 text-left rounded-lg hover:bg-white/[0.04] transition-colors"
+            className="focus-ring flex w-full items-center gap-2 rounded-md px-3 py-2 text-left transition-colors hover:bg-white/[0.04]"
           >
-            <svg
+            <CaretRight
+              size={12}
+              weight="bold"
               className={cn(
-                "w-3 h-3 text-zinc-500 transition-transform",
+                "text-zinc-500 transition-transform",
                 expandedType === type.type_name && "rotate-90",
               )}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
+            />
             <span className="text-sm font-medium text-zinc-300">
               {type.type_name}
             </span>
@@ -70,9 +63,9 @@ export function EntityTypeList({
                   key={entity.entity_id}
                   onClick={() => onSelectEntity(entity)}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 text-left rounded-lg transition-colors text-sm",
+                    "focus-ring flex items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm transition-colors",
                     selectedEntityId === entity.entity_id
-                      ? "bg-amber-500/10 text-amber-400"
+                      ? "bg-cyan-400/10 text-cyan-300"
                       : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-300",
                   )}
                 >

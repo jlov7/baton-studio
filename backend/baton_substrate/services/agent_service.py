@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from baton_substrate.db.schema import AgentRow
+from baton_substrate.db.schema import AgentRow, EnergyAccountRow
 from baton_substrate.models.agent import AgentDetail
 from baton_substrate.models.common import Actor
 from baton_substrate.services import event_service
@@ -23,16 +23,29 @@ async def register(
     role: str = "agent",
 ) -> AgentDetail:
     now = _now()
-    row = AgentRow(
-        mission_id=mission_id,
-        actor_id=actor_id,
-        display_name=display_name or actor_id,
-        role=role,
-        joined_at=now,
-        last_seen_at=now,
-        status="active",
+    result = await db.execute(
+        select(AgentRow).where(
+            AgentRow.mission_id == mission_id,
+            AgentRow.actor_id == actor_id,
+        )
     )
-    db.add(row)
+    row = result.scalar_one_or_none()
+    if row:
+        row.display_name = display_name or actor_id
+        row.role = role
+        row.last_seen_at = now
+        row.status = "active"
+    else:
+        row = AgentRow(
+            mission_id=mission_id,
+            actor_id=actor_id,
+            display_name=display_name or actor_id,
+            role=role,
+            joined_at=now,
+            last_seen_at=now,
+            status="active",
+        )
+        db.add(row)
     await db.flush()
     actor = Actor(actor_id=actor_id, actor_type="agent", display_name=display_name or actor_id)
     await event_service.emit(
@@ -56,6 +69,10 @@ async def register(
 async def list_agents(db: AsyncSession, mission_id: str) -> list[AgentDetail]:
     result = await db.execute(select(AgentRow).where(AgentRow.mission_id == mission_id))
     rows = result.scalars().all()
+    balance_result = await db.execute(
+        select(EnergyAccountRow).where(EnergyAccountRow.mission_id == mission_id)
+    )
+    balances = {r.actor_id: r.balance for r in balance_result.scalars().all()}
     return [
         AgentDetail(
             actor_id=r.actor_id,
@@ -64,6 +81,7 @@ async def list_agents(db: AsyncSession, mission_id: str) -> list[AgentDetail]:
             joined_at=r.joined_at,
             last_seen_at=r.last_seen_at,
             status=r.status,
+            energy_balance=balances.get(r.actor_id, 0),
         )
         for r in rows
     ]

@@ -27,6 +27,6 @@ test.describe("Mission Control - Demo Flow", () => {
     });
     await expect(page.getByText("Squad")).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText("Atlas")).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText("running")).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("main").getByText("running")).toBeVisible({ timeout: 10_000 });
   });
 });

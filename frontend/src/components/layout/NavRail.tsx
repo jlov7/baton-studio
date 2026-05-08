@@ -2,48 +2,64 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  ClockCounterClockwise,
+  Database,
+  DownloadSimple,
+  GitBranch,
+  House,
+} from "@phosphor-icons/react";
+import { useMissionContext } from "@/lib/state/MissionContext";
 import { cn } from "@/lib/utils/cn";
 
 const NAV_ITEMS = [
-  { href: "/mission", label: "Mission", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
-  { href: "/world", label: "World", icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" },
-  { href: "/graph", label: "Graph", icon: "M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" },
-  { href: "/timeline", label: "Timeline", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
-  { href: "/export", label: "Export", icon: "M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
+  { href: "/mission", label: "Mission", icon: House },
+  { href: "/world", label: "World", icon: Database },
+  { href: "/graph", label: "Graph", icon: GitBranch },
+  { href: "/timeline", label: "Timeline", icon: ClockCounterClockwise },
+  { href: "/export", label: "Export", icon: DownloadSimple },
 ] as const;
 
 export function NavRail() {
   const pathname = usePathname();
+  const { missionId } = useMissionContext();
+  const query = missionId ? `?mission=${encodeURIComponent(missionId)}` : "";
 
   return (
-    <nav className="flex flex-col w-16 bg-zinc-950 border-r border-white/[0.06] py-4 items-center gap-1">
-      <div className="text-amber-400 font-bold text-lg mb-4 tracking-tight">B</div>
-      {NAV_ITEMS.map((item) => {
-        const active = pathname.startsWith(item.href);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              "flex flex-col items-center gap-0.5 w-12 py-2 rounded-lg transition-colors",
-              "hover:bg-white/[0.06]",
-              active && "bg-white/[0.08] text-amber-400",
-              !active && "text-zinc-500",
-            )}
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
+    <nav className="z-20 flex border-white/[0.08] bg-[#08090b]/95 backdrop-blur-xl md:w-[76px] md:flex-col md:items-center md:border-r md:py-4 fixed inset-x-0 bottom-0 h-16 border-t md:static md:inset-auto md:h-screen md:border-t-0">
+      <Link
+        href={`/mission${query}`}
+        className="hidden md:flex h-11 w-11 items-center justify-center rounded-md border border-cyan-400/20 bg-cyan-400/[0.08] text-cyan-200"
+        aria-label="Baton Studio"
+      >
+        <span className="font-mono text-sm font-semibold">B</span>
+      </Link>
+
+      <div className="grid w-full grid-cols-5 md:mt-6 md:flex md:flex-col md:gap-1">
+        {NAV_ITEMS.map((item) => {
+          const active = pathname.startsWith(item.href);
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={`${item.href}${query}`}
+              className={cn(
+                "group flex min-w-0 flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] transition-colors md:h-[58px] md:w-[58px] md:rounded-md",
+                active
+                  ? "text-cyan-100 md:bg-white/[0.08]"
+                  : "text-zinc-500 hover:text-zinc-200 md:hover:bg-white/[0.05]",
+              )}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-            </svg>
-            <span className="text-[10px] leading-none">{item.label}</span>
-          </Link>
-        );
-      })}
+              <Icon
+                size={20}
+                weight={active ? "duotone" : "regular"}
+                className={cn(active && "text-cyan-300")}
+              />
+              <span className="truncate leading-none">{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }

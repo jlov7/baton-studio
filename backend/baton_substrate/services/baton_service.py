@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from baton_substrate.config import settings
 from baton_substrate.db.schema import BatonStateRow
 from baton_substrate.models.baton import BatonStateResponse
 from baton_substrate.models.common import Actor
@@ -21,7 +22,9 @@ def _iso(dt: datetime) -> str:
 
 
 async def _get_state(db: AsyncSession, mission_id: str) -> BatonStateRow:
-    result = await db.execute(select(BatonStateRow).where(BatonStateRow.mission_id == mission_id))
+    result = await db.execute(
+        select(BatonStateRow).where(BatonStateRow.mission_id == mission_id).with_for_update()
+    )
     row = result.scalar_one_or_none()
     if not row:
         raise ValueError(f"No baton state for mission {mission_id}")
@@ -47,7 +50,7 @@ async def _auto_release_if_expired(db: AsyncSession, row: BatonStateRow) -> bool
             next_holder = queue.pop(0)
             row.holder_actor_id = next_holder
             row.queue_json = json.dumps(queue)
-            row.lease_expires_at = _iso(_now() + timedelta(milliseconds=20_000))
+            row.lease_expires_at = _iso(_now() + timedelta(milliseconds=settings.baton_lease_ms))
         else:
             row.holder_actor_id = None
             row.queue_json = "[]"
@@ -71,6 +74,8 @@ async def claim(
     actor_id: str,
     lease_ms: int = 20_000,
 ) -> BatonStateResponse:
+    if lease_ms <= 0:
+        raise ValueError("Lease must be positive")
     row = await _get_state(db, mission_id)
     await _auto_release_if_expired(db, row)
 
@@ -132,7 +137,7 @@ async def release(
         next_holder = queue.pop(0)
         row.holder_actor_id = next_holder
         row.queue_json = json.dumps(queue)
-        row.lease_expires_at = _iso(_now() + timedelta(milliseconds=20_000))
+        row.lease_expires_at = _iso(_now() + timedelta(milliseconds=settings.baton_lease_ms))
         await event_service.emit(
             db,
             mission_id,

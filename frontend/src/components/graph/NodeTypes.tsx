@@ -1,15 +1,17 @@
 "use client";
 
 import { memo } from "react";
-import { Handle, Position, type NodeProps } from "reactflow";
+import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { cn } from "@/lib/utils/cn";
 
-interface CausalNodeData {
+type CausalNodeData = Record<string, unknown> & {
   label: string;
   nodeType: string;
   status: string;
   metadata: Record<string, unknown>;
-}
+};
+
+type CausalNodeType = Node<CausalNodeData, "causal">;
 
 const TYPE_STYLES: Record<string, { bg: string; border: string; text: string }> = {
   Evidence: {
@@ -41,7 +43,7 @@ const TYPE_STYLES: Record<string, { bg: string; border: string; text: string }> 
 
 export const CausalNode = memo(function CausalNode({
   data,
-}: NodeProps<CausalNodeData>) {
+}: NodeProps<CausalNodeType>) {
   const style = TYPE_STYLES[data.nodeType] ?? TYPE_STYLES.default;
   const stale = data.status === "stale";
 
@@ -50,7 +52,7 @@ export const CausalNode = memo(function CausalNode({
       <Handle type="target" position={Position.Top} className="!bg-zinc-600 !w-2 !h-2 !border-0" />
       <div
         className={cn(
-          "flex flex-col gap-0.5 px-3 py-2 rounded-xl border min-w-[120px] max-w-[200px] transition-all",
+          "flex min-w-[120px] max-w-[200px] flex-col gap-0.5 rounded-lg border px-3 py-2 transition-all",
           style.bg,
           style.border,
           stale && "opacity-50 border-dashed",

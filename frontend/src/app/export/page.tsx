@@ -18,7 +18,7 @@ export default function ExportPage() {
 
   if (!mission) {
     return (
-      <div className="flex flex-col gap-6 p-6 max-w-2xl">
+      <div className="mx-auto flex max-w-3xl flex-col gap-5 p-4 md:p-6">
         <EmptyState
           title="No Mission Loaded"
           description="Import a mission pack or load a demo mission from Mission Control."
@@ -29,8 +29,8 @@ export default function ExportPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-2xl">
-      <h2 className="text-lg font-semibold">Export / Mission Packs</h2>
+    <div className="mx-auto flex max-w-3xl flex-col gap-5 p-4 md:p-6">
+      <h2 className="text-lg font-semibold">Mission Packs</h2>
       <ExportPanel
         missionId={mission.mission_id}
         missionTitle={mission.title}

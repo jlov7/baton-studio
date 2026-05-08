@@ -20,15 +20,15 @@ interface FilterBarProps {
 
 export function FilterBar({ activeFilter, onFilterChange, eventCount }: FilterBarProps) {
   return (
-    <div className="flex items-center gap-2 px-4 py-2 border-b border-white/[0.06] bg-zinc-900/80">
+    <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.08] bg-[#0b0d10]/88 px-4 py-2 backdrop-blur">
       {EVENT_TYPES.map((type) => (
         <button
           key={type.id}
           onClick={() => onFilterChange(type.id)}
           className={cn(
-            "px-2 py-1 text-[11px] rounded-md transition-colors",
+            "focus-ring rounded-md px-2 py-1 text-[11px] transition-colors",
             activeFilter === type.id
-              ? "bg-amber-500/15 text-amber-400"
+              ? "bg-cyan-400/15 text-cyan-300"
               : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]",
           )}
         >

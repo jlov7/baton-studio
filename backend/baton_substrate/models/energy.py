@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class EnergyBalanceResponse(BaseModel):
@@ -10,8 +10,8 @@ class EnergyBalanceResponse(BaseModel):
 
 
 class EnergySpendRequest(BaseModel):
-    actor_id: str
-    amount: int
+    actor_id: str = Field(min_length=1)
+    amount: int = Field(gt=0)
     reason: str = ""
 
 
@@ -20,5 +20,5 @@ class EnergySpendResponse(BaseModel):
 
 
 class EnergyAllocateRequest(BaseModel):
-    actor_id: str
-    amount: int
+    actor_id: str = Field(min_length=1)
+    amount: int = Field(gt=0)

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections import defaultdict
 
 from fastapi import WebSocket
+
+logger = logging.getLogger("baton_substrate.ws")
 
 
 class ConnectionManager:
@@ -31,7 +34,11 @@ class ConnectionManager:
         for ws in conns:
             try:
                 await ws.send_json(message)
-            except Exception:
+            except Exception as exc:
+                logger.warning(
+                    "websocket_broadcast_failed",
+                    extra={"mission_id": mission_id, "error": str(exc)},
+                )
                 dead.append(ws)
         for ws in dead:
             await self.disconnect(mission_id, ws)

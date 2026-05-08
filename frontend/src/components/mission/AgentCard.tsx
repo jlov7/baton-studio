@@ -24,7 +24,7 @@ export function AgentCard({ agent, isHolder, missionBudget }: AgentCardProps) {
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 p-3 rounded-xl border transition-all duration-300",
+        "flex flex-col gap-2 rounded-lg border p-3 transition-all duration-300",
         isHolder
           ? "border-amber-500/40 bg-amber-500/[0.05] shadow-[0_0_16px_rgba(245,158,11,0.08)]"
           : "border-white/[0.06] bg-zinc-900/60",
