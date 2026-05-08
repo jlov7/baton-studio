@@ -71,7 +71,7 @@ make demo     # writes dist/demo_pack.zip and builds the frontend
 
 Current quality bar:
 
-- backend tests: 83 passing
+- backend tests: 85 passing
 - MCP tests: 8 passing
 - Playwright E2E: 21 passing
 - full backend mypy: passing
@@ -167,6 +167,7 @@ Detailed specs:
 
 - [PRODUCT.md](PRODUCT.md)
 - [DESIGN.md](DESIGN.md)
+- [docs/QUALITY_BURN_DOWN.md](docs/QUALITY_BURN_DOWN.md)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - [docs/API_SPEC.md](docs/API_SPEC.md)
 - [docs/DATA_MODEL.md](docs/DATA_MODEL.md)
@@ -219,6 +220,7 @@ make e2e
 - Backend tests live in [backend/tests](backend/tests).
 - Frontend E2E tests live in [frontend/tests](frontend/tests).
 - MCP tests live in [mcp_server/tests](mcp_server/tests).
-- Active engineering notes live in [.codex](.codex).
+- Public security policy lives in [SECURITY.md](SECURITY.md).
+- The quality burn-down lives in [docs/QUALITY_BURN_DOWN.md](docs/QUALITY_BURN_DOWN.md).
 
 For contribution workflow and common issues, see [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).

@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.11.11"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "11.0.8"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Run core checks
+        run: make check
+
+      - name: Run dependency audits
+        run: make audit
+
+      - name: Verify fresh SQLite migration
+        run: |
+          tmpdir="$(mktemp -d)"
+          tmpdb="$tmpdir/baton-alembic.sqlite"
+          cd backend
+          BATON_DATABASE_URL="sqlite+aiosqlite:///$tmpdb" uv run alembic upgrade head
+
+      - name: Build frontend
+        run: cd frontend && pnpm build
+
+      - name: Validate Docker Compose
+        run: docker compose config >/tmp/baton-compose.yml
+
+  e2e:
+    name: Browser E2E
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.11.11"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "11.0.8"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
+        run: cd frontend && pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: cd frontend && pnpm exec playwright install --with-deps chromium
+
+      - name: Run Playwright
+        run: make e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-artifacts
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build containers
+        run: docker compose build

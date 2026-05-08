@@ -37,12 +37,14 @@ Run these before sending a PR:
 
 ```bash
 make check
+make audit
 make e2e
 ```
 
 What they do:
 
 - `make check` installs what it needs and runs backend lint/format/typecheck/tests, frontend lint/typecheck, and MCP smoke tests.
+- `make audit` runs backend, frontend, and MCP dependency audits.
 - `make e2e` self-starts backend and frontend, runs Playwright against an isolated test DB, and refreshes `assets/ui/*.png`.
 
 For release artifacts:
@@ -73,7 +75,9 @@ uv run --project mcp_server baton-mcp-server
 Before opening a PR:
 
 - Ensure `make check` passes.
+- Ensure `make audit` passes.
 - Ensure `make e2e` passes.
+- Run `docker compose config` when deployment files changed.
 - Include screenshots for UI changes if the rendered UI changed.
 - Mention any docs or artifact updates in the PR summary.
 
@@ -83,4 +87,5 @@ Before opening a PR:
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - [docs/API_SPEC.md](docs/API_SPEC.md)
 - [docs/MCP_SPEC.md](docs/MCP_SPEC.md)
+- [docs/QUALITY_BURN_DOWN.md](docs/QUALITY_BURN_DOWN.md)
 - [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
