@@ -13,10 +13,13 @@ export function useWebSocket(
   const [status, setStatus] = useState<WSStatus>("disconnected");
   const wsRef = useRef<WebSocket | null>(null);
   const onEventRef = useRef(onEvent);
-  onEventRef.current = onEvent;
-
-  const reconnectTimer = useRef<ReturnType<typeof setTimeout>>();
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectDelay = useRef(1000);
+  const connectRef = useRef<() => void>(() => {});
+
+  useEffect(() => {
+    onEventRef.current = onEvent;
+  }, [onEvent]);
 
   const connect = useCallback(() => {
     if (!missionId) return;
@@ -43,7 +46,7 @@ export function useWebSocket(
       wsRef.current = null;
       reconnectTimer.current = setTimeout(() => {
         reconnectDelay.current = Math.min(reconnectDelay.current * 2, 10000);
-        connect();
+        connectRef.current();
       }, reconnectDelay.current);
     };
 
@@ -53,13 +56,23 @@ export function useWebSocket(
   }, [missionId]);
 
   useEffect(() => {
-    connect();
+    connectRef.current = connect;
+  }, [connect]);
+
+  useEffect(() => {
+    connectRef.current();
     return () => {
-      clearTimeout(reconnectTimer.current);
-      wsRef.current?.close();
+      if (reconnectTimer.current) {
+        clearTimeout(reconnectTimer.current);
+        reconnectTimer.current = null;
+      }
+      if (wsRef.current) {
+        wsRef.current.onclose = null;
+        wsRef.current.close();
+      }
       wsRef.current = null;
     };
-  }, [connect]);
+  }, [missionId]);
 
   return { status };
 }

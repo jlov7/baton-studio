@@ -10,7 +10,7 @@
 
 ## Architecture
 - **Backend**: FastAPI + SQLite (async via aiosqlite/SQLAlchemy) on port 8787
-- **Frontend**: Next.js 15 + React 18 + Tailwind + React Flow + Framer Motion on port 3000
+- **Frontend**: Next.js 16 + React 19 + Tailwind CSS 4 + React Flow + Framer Motion on port 3000
 - **MCP Server**: Python stdio server proxying to backend HTTP API
 
 ## Conventions

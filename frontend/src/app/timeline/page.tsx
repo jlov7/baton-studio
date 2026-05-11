@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useMissionContext } from "@/lib/state/MissionContext";
 import { useInspector } from "@/components/layout/InspectorDrawer";
@@ -15,18 +15,19 @@ export default function TimelinePage() {
   const { mission, events } = useMissionContext();
   const { openInspector } = useInspector();
   const [filter, setFilter] = useState("all");
-  const [replayIndex, setReplayIndex] = useState(0);
+  const [replayIndex, setReplayIndex] = useState(Number.MAX_SAFE_INTEGER);
 
   const filteredEvents = useMemo(() => {
     if (filter === "all") return events;
     return events.filter((e) => e.type.startsWith(filter));
   }, [events, filter]);
 
-  useEffect(() => {
-    setReplayIndex(filteredEvents.length);
-  }, [filteredEvents.length]);
-
-  const visibleEvents = filteredEvents.slice(0, replayIndex);
+  const replayPosition = Math.min(replayIndex, filteredEvents.length);
+  const visibleEvents = filteredEvents.slice(0, replayPosition);
+  const handleFilterChange = useCallback((nextFilter: string) => {
+    setFilter(nextFilter);
+    setReplayIndex(Number.MAX_SAFE_INTEGER);
+  }, []);
 
   const handleEventClick = useCallback(
     (event: EventEnvelope) => {
@@ -83,7 +84,7 @@ export default function TimelinePage() {
     <div className="flex flex-col h-full">
       <FilterBar
         activeFilter={filter}
-        onFilterChange={setFilter}
+        onFilterChange={handleFilterChange}
         eventCount={visibleEvents.length}
       />
       <div className="flex items-center gap-3 border-b border-white/[0.08] bg-[#0b0d10]/70 px-4 py-2">
@@ -93,7 +94,7 @@ export default function TimelinePage() {
           type="range"
           min={0}
           max={filteredEvents.length}
-          value={replayIndex}
+          value={replayPosition}
           onChange={(event) => setReplayIndex(Number(event.target.value))}
           className="h-1 flex-1 accent-cyan-300"
         />
@@ -101,7 +102,7 @@ export default function TimelinePage() {
           className="w-20 text-right font-mono text-[11px] text-zinc-500"
           data-testid="timeline-replay-counter"
         >
-          {replayIndex}/{filteredEvents.length}
+          {replayPosition}/{filteredEvents.length}
         </span>
       </div>
       <EventStream events={visibleEvents} onEventClick={handleEventClick} />

@@ -2,7 +2,6 @@
 
 import { useState, type ReactNode } from "react";
 import { X } from "@phosphor-icons/react";
-import { cn } from "@/lib/utils/cn";
 
 interface InspectorDrawerProps {
   children: ReactNode;

@@ -2,6 +2,4 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
 overrides:
-  '@typescript-eslint/parser': 8.59.2
   postcss: 8.5.14
-  next@15.5.15>postcss: 8.5.14

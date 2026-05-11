@@ -48,7 +48,11 @@ interface MissionState {
 const MissionContext = createContext<MissionState | null>(null);
 
 export function MissionProvider({ children }: { children: ReactNode }) {
-  const [missionId, setMissionIdState] = useState<string | null>(null);
+  const [missionId, setMissionIdState] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    const params = new URLSearchParams(window.location.search);
+    return params.get("mission") || window.localStorage.getItem(MISSION_STORAGE_KEY);
+  });
   const [mission, setMission] = useState<MissionResponse | null>(null);
   const [world, setWorld] = useState<WorldSnapshot | null>(null);
   const [baton, setBaton] = useState<BatonStateResponse | null>(null);
@@ -108,26 +112,18 @@ export function MissionProvider({ children }: { children: ReactNode }) {
   }, [missionId, setMissionId]);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const queryMission = params.get("mission");
-    const storedMission = window.localStorage.getItem(MISSION_STORAGE_KEY);
-    const nextMission = queryMission || storedMission;
-    if (nextMission) {
-      setMissionId(nextMission);
-    }
-  }, [setMissionId]);
-
-  useEffect(() => {
     if (missionId) {
-      refresh();
+      void Promise.resolve().then(refresh);
     } else {
-      setMission(null);
-      setWorld(null);
-      setBaton(null);
-      setAgents([]);
-      setGraph(null);
-      setScMetric(null);
-      setEvents([]);
+      queueMicrotask(() => {
+        setMission(null);
+        setWorld(null);
+        setBaton(null);
+        setAgents([]);
+        setGraph(null);
+        setScMetric(null);
+        setEvents([]);
+      });
     }
   }, [missionId, refresh]);
 

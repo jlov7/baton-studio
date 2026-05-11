@@ -10,7 +10,6 @@ export function BackendCheck({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    setStatus("checking");
     checkHealth()
       .then(() => { if (!cancelled) setStatus("ok"); })
       .catch(() => { if (!cancelled) setStatus("offline"); });
@@ -39,7 +38,10 @@ export function BackendCheck({ children }: { children: React.ReactNode }) {
           make dev
         </code>
         <button
-          onClick={() => setAttempt((value) => value + 1)}
+          onClick={() => {
+            setStatus("checking");
+            setAttempt((value) => value + 1);
+          }}
           className="focus-ring mt-2 rounded px-3 py-1 text-xs text-zinc-500 transition-colors hover:bg-white/[0.05] hover:text-zinc-300"
         >
           Retry
