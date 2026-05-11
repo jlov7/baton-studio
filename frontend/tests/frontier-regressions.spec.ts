@@ -64,10 +64,9 @@ test("stale persisted mission is cleared after backend reset", async ({ page }) 
 
   await page.goto("/mission");
 
+  await expect
+    .poll(() => page.evaluate(() => window.localStorage.getItem("baton.currentMissionId")))
+    .toBeNull();
   await expect(page).not.toHaveURL(/mission=mis_missing_after_reset/);
   await expect(page.getByText("Load Demo Mission")).toBeVisible();
-  const storedMission = await page.evaluate(() =>
-    window.localStorage.getItem("baton.currentMissionId"),
-  );
-  expect(storedMission).toBeNull();
 });
